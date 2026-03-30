@@ -310,9 +310,6 @@ body{font-family:var(--ui-font);background:var(--bg);color:var(--text);min-heigh
         <div class="sdot" id="sdot"></div>
         <span id="stext">Chưa kết nối</span>
       </div>
-      <button class="btn-icon" onclick="refreshAll()" title="Làm mới dữ liệu">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.3-3.9M13.5 8A5.5 5.5 0 0 1 4.2 11.9"/><path d="M12 2.9h0v3h-3M4 13.1h0v-3h3"/></svg>
-      </button>
       <button class="btn-icon" onclick="openCfg()" title="Cài đặt Notion">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
       </button>
@@ -374,8 +371,13 @@ body{font-family:var(--ui-font);background:var(--bg);color:var(--text);min-heigh
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Bộ thẻ (Deck)</label>
-              <input class="form-input" type="text" id="new-deck" list="deck-options" placeholder="Nhập deck hoặc chọn gợi ý..." autocomplete="off" />
-              <datalist id="deck-options"></datalist>
+              <select class="form-select" id="new-deck">
+                <option value="BA-SQL">BA · SQL</option>
+                <option value="IELTS">IELTS</option>
+                <option value="Fintech">Fintech</option>
+                <option value="Agile">Agile</option>
+                <option value="Self-study">Self-study</option>
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label">Tags (phân cách bằng dấu phẩy)</label>
@@ -484,9 +486,6 @@ body{font-family:var(--ui-font);background:var(--bg);color:var(--text);min-heigh
   <div class="review-topbar">
     <button class="btn-icon" onclick="exitSession()" title="Thoát">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8.5 1L2 7l6.5 6M2 7h10"/></svg>
-    </button>
-    <button class="btn-icon" onclick="refreshAll()" title="Làm mới dữ liệu">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 8a5.5 5.5 0 0 1 9.3-3.9M13.5 8A5.5 5.5 0 0 1 4.2 11.9"/><path d="M12 2.9h0v3h-3M4 13.1h0v-3h3"/></svg>
     </button>
     <div class="progress-wrap">
       <div class="progress-meta">
@@ -647,7 +646,8 @@ const S = {
   document.getElementById('limit-slider').addEventListener('input', function(){
     S.limit = parseInt(this.value);
   });
-  fetchCards();
+  if(S.cfg.token && S.cfg.cardDb) fetchCards();
+  else runDemo();
 })();
 
 // ═══════════════════════════════════════════════════════════════════
@@ -700,47 +700,20 @@ function saveCfg(){
   S.cfg = c; S.isDemo = false;
   S.logsLoaded = false;
   closeCfg();
-  fetchCards(true);
+  fetchCards();
 }
 
 function openCfg(){ document.getElementById('cfg-overlay').classList.add('show') }
 function closeCfg(){ document.getElementById('cfg-overlay').classList.remove('show') }
 function closeCfgOutside(e){ if(e.target===document.getElementById('cfg-overlay')) closeCfg() }
 
-function buildSrsHeaders(extra={}){
-  const cfg = S.cfg || {};
-  return {
-    'Content-Type': 'application/json',
-    'x-srs-token': cfg.token || '',
-    'x-srs-card-db': cfg.cardDb || '',
-    'x-srs-log-db': cfg.logDb || '',
-    'x-srs-prop-front': cfg.front || 'Front',
-    'x-srs-prop-back': cfg.back || 'Back',
-    'x-srs-prop-deck': cfg.deck || 'Deck',
-    'x-srs-prop-tags': cfg.tags || 'Tags',
-    'x-srs-prop-next': cfg.next || 'Next Review',
-    'x-srs-prop-ef': cfg.ef || 'EF',
-    'x-srs-prop-interval': cfg.interval || 'Interval',
-    'x-srs-prop-reps': cfg.reps || 'Repetitions',
-    'x-srs-prop-status': cfg.status || 'Status',
-    ...extra,
-  };
-}
-
-function refreshAll(){
-  toast('Đang làm mới dữ liệu từ Notion…');
-  fetchCards(true);
-  if(S.logsLoaded) fetchLogs(true);
-}
-
 // ═══════════════════════════════════════════════════════════════════
 // FETCH CARDS
 // ═══════════════════════════════════════════════════════════════════
-async function fetchCards(forceRefresh=false){
+async function fetchCards(){
   setStatus('loading','Đang tải thẻ từ Notion…');
   try{
-    const url = `/api/srs?action=due${forceRefresh ? `&_=${Date.now()}` : ''}`;
-    const res  = await fetch(url, { cache:'no-store', headers: buildSrsHeaders() });
+    const res  = await fetch('/api/srs?action=due');
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if(data.error) throw new Error(data.error);
@@ -748,7 +721,6 @@ async function fetchCards(forceRefresh=false){
     S.isDemo = false;
     setStatus('ok',`Đã tải ${S.cards.length} thẻ đến hạn`);
     updateSetupStats();
-    await fetchStats(forceRefresh);
   }catch(err){
     setStatus('err',`Lỗi: ${err.message}`);
     toast('Không kết nối được Notion — chuyển Demo mode');
@@ -784,29 +756,11 @@ function runDemo(){
 // SETUP STATS & DECK GRID
 // ═══════════════════════════════════════════════════════════════════
 function updateSetupStats(){
-  const stats = S.stats || {};
-  document.getElementById('st-due').textContent      = stats.due ?? S.cards.length;
-  document.getElementById('st-new').textContent      = stats.new ?? S.cards.filter(c=>c.status==='New').length;
-  document.getElementById('st-total').textContent    = stats.total ?? S.cards.length;
-  document.getElementById('st-mastered').textContent = stats.mastered ?? S.cards.filter(c=>c.status==='Mastered').length;
+  document.getElementById('st-due').textContent     = S.cards.length;
+  document.getElementById('st-new').textContent     = S.cards.filter(c=>c.status==='New').length;
+  document.getElementById('st-total').textContent   = S.cards.length;
+  document.getElementById('st-mastered').textContent = S.cards.filter(c=>c.status==='Mastered').length;
   renderDecks(S.cards);
-}
-
-async function fetchStats(forceRefresh=false){
-  if(S.isDemo) return;
-  try{
-    const url = `/api/srs?action=stats${forceRefresh ? `&_=${Date.now()}` : ''}`;
-    const res = await fetch(url, { cache:'no-store', headers: buildSrsHeaders() });
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if(data.error) throw new Error(data.error);
-    S.stats = data;
-    renderDeckSuggestions(Object.keys(data.decks || {}));
-    updateSetupStats();
-  }catch(err){
-    console.warn('Fetch stats failed:', err.message);
-    renderDeckSuggestions([...new Set(S.cards.map(c=>c.deck).filter(Boolean))].sort());
-  }
 }
 
 function renderDecks(cards){
@@ -827,18 +781,6 @@ function renderDecks(cards){
     btn.onclick=function(){selectDeck(this)};
     btn.innerHTML = `<div class="deck-name">${d}</div><div class="deck-count">${count} thẻ đến hạn</div>`;
     grid.appendChild(btn);
-  });
-}
-
-function renderDeckSuggestions(deckNames){
-  const list = document.getElementById('deck-options');
-  if(!list) return;
-  const names = [...new Set((deckNames || []).map(n => String(n || '').trim()).filter(Boolean))].sort();
-  list.innerHTML = '';
-  names.forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    list.appendChild(opt);
   });
 }
 
@@ -921,7 +863,7 @@ async function rateCard(q){
   card.ef=result.newEf; card.interval=result.newInterval; card.reps=result.newReps;
   S.results.push({card,q,pass:result.pass,result});
   if(result.pass) S.passCount++; else S.failCount++;
-  if(!S.isDemo) await syncCard(card, q, result);
+  if(!S.isDemo) syncCard(card, q, result);
   setTimeout(()=>{
     document.getElementById('card-body').classList.remove('flipped');
     document.getElementById('rating-panel').classList.remove('visible');
@@ -936,26 +878,29 @@ async function rateCard(q){
 //        BUG FIX: checks response status and logs errors
 // ═══════════════════════════════════════════════════════════════════
 async function syncCard(card, q, result){
+  if(!S.cfg.token || !S.cfg.cardDb) return;   // FIX: was && (wrong)
   try{
+    // 1. Update SM-2 fields on Flashcard DB
     const r1 = await fetch('/api/srs',{
       method:'POST',
-      headers: buildSrsHeaders(),
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ action:'review', pageId:card.id, ...result }),
     });
     if(!r1.ok){
       const e = await r1.json().catch(()=>({}));
-      console.warn('SM-2 update failed:', e.error||r1.status, e.detail||'');
+      console.warn('SM-2 update failed:', e.error||r1.status);
     }
 
+    // 2. Write Review Log entry — now sends cardFront + cardDeck for display
     if(S.cfg.logDb){
       const r2 = await fetch('/api/srs',{
         method:'POST',
-        headers: buildSrsHeaders(),
+        headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           action:      'log',
           cardId:      card.id,
-          cardFront:   card.front,
-          cardDeck:    card.deck,
+          cardFront:   card.front,          // FIX: was missing
+          cardDeck:    card.deck,           // FIX: was missing
           date:        localDate(new Date()),
           rating:      q,
           newInterval: result.newInterval,
@@ -964,7 +909,8 @@ async function syncCard(card, q, result){
       });
       if(!r2.ok){
         const e = await r2.json().catch(()=>({}));
-        console.warn('Review Log failed:', e.error||r2.status, e.hint||'', e.detail||'');
+        console.warn('Review Log failed:', e.error||r2.status, e.hint||'');
+        // Surface error to user if SRS_LOG_DB is misconfigured
         if(r2.status===400 && e.error?.includes('SRS_LOG_DB')){
           toast('⚠️ Review Log chưa cấu hình — kiểm tra SRS_LOG_DB trong Vercel');
         }
@@ -1014,36 +960,34 @@ function endSession(){
 // ═══════════════════════════════════════════════════════════════════
 // CREATE CARD (Tab 2, Section A)
 // ═══════════════════════════════════════════════════════════════════
-async function createCard(evt){
+async function createCard(ev){
   if(S.isDemo){ toast('Cần kết nối Notion thật để tạo thẻ'); return; }
   const front = document.getElementById('new-front').value.trim();
   const back  = document.getElementById('new-back').value.trim();
-  const deck  = document.getElementById('new-deck').value.trim();
+  const deck  = document.getElementById('new-deck').value;
   const tagRaw= document.getElementById('new-tags').value.trim();
   const tags  = tagRaw ? tagRaw.split(',').map(t=>t.trim()).filter(Boolean) : [];
 
   if(!front){ showAlert('create-alert','error','Vui lòng nhập mặt trước của thẻ'); return; }
-  if(!back){  showAlert('create-alert','error','Vui lòng nhập mặt sau của thẻ'); return; }
-
-  const btn = evt?.currentTarget || evt?.target || document.querySelector('#tab-create .btn-primary');
+  if(!back){  showAlert('create-alert','error','Vui lòng nhập mặt sau của thẻ'); return; }  const btn = ev?.currentTarget || ev?.target || document.querySelector('#tab-create .btn-primary');
   if(btn){ btn.textContent='Đang tạo…'; btn.disabled=true; }
 
   try{
     const res = await fetch('/api/srs',{
       method:'POST',
-      headers: buildSrsHeaders(),
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ action:'create', front, back, deck, tags }),
     });
-    const data = await res.json().catch(()=>({}));
-    if(!res.ok || !data.ok) throw new Error(data.error||data.detail||'Tạo thẻ thất bại');
-    showAlert('create-alert','success',`✓ Đã tạo thẻ "${front.substring(0,50)}"${deck ? ` vào bộ ${deck}` : ''}`);
+    const data = await res.json();
+    if(!res.ok || !data.ok) throw new Error(data.error||'Tạo thẻ thất bại');
+    showAlert('create-alert','success',`✓ Đã tạo thẻ "${front.substring(0,50)}" vào bộ ${deck}`);
     clearCreateForm();
+    // Refresh card list
     S.logsLoaded=false;
-    await fetchCards(true);
+    fetchCards();
   }catch(err){
     showAlert('create-alert','error','Lỗi: '+err.message);
-  }finally{
-    if(btn){ btn.textContent='Tạo thẻ'; btn.disabled=false; }
+  }finally{    if(btn){ btn.textContent='Tạo thẻ'; btn.disabled=false; }
   }
 }
 
@@ -1123,7 +1067,7 @@ async function confirmImport(){
   try{
     const res = await fetch('/api/srs',{
       method:'POST',
-      headers: buildSrsHeaders(),
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ action:'import', cards:S.importData }),
     });
     const data = await res.json();
@@ -1138,7 +1082,7 @@ async function confirmImport(){
       ? `✓ Import hoàn tất: ${data.success} thẻ thành công, ${data.failed} thất bại`
       : `✓ Import thành công ${data.success} thẻ vào Notion!`;
     showAlert('create-alert','success',msg);
-    await fetchCards(true);
+    fetchCards();
   }catch(err){
     progress.classList.remove('show');
     showAlert('create-alert','error','Lỗi import: '+err.message);
@@ -1191,6 +1135,15 @@ async function fetchLogs(forceRefresh=false){
     renderLogsMock();
     return;
   }
+  if(!S.cfg.logDb){
+    document.getElementById('log-container').innerHTML=`
+      <div class="empty-state">
+        <p>Chưa cấu hình <strong>Review Log DB</strong></p>
+        <p style="margin-top:6px">Thêm <code style="font-size:11px;background:var(--bg2);padding:1px 5px;border-radius:4px">SRS_LOG_DB</code> vào Vercel và điền DB ID vào ⚙️</p>
+      </div>`;
+    return;
+  }
+
   document.getElementById('log-container').innerHTML=`
     <div style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">
       <div style="width:20px;height:20px;border:2px solid var(--bd2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px"></div>
@@ -1198,8 +1151,7 @@ async function fetchLogs(forceRefresh=false){
     </div>`;
 
   try{
-    const url = `/api/srs?action=logs&limit=100${forceRefresh ? `&_=${Date.now()}` : ''}`;
-    const res = await fetch(url, { cache:'no-store', headers: buildSrsHeaders() });
+    const res = await fetch('/api/srs?action=logs&limit=100');
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if(data.warning){
