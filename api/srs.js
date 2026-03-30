@@ -11,176 +11,299 @@
  */
 
 export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, x-srs-token, x-srs-card-db, x-srs-log-db, x-srs-prop-front, x-srs-prop-back, x-srs-prop-deck, x-srs-prop-tags, x-srs-prop-next, x-srs-prop-ef, x-srs-prop-interval, x-srs-prop-reps, x-srs-prop-status, x-srs-log-prop-title, x-srs-log-prop-card, x-srs-log-prop-date, x-srs-log-prop-rating, x-srs-log-prop-interval, x-srs-log-prop-ef, x-srs-log-prop-deck, x-srs-log-prop-result"
+  );
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  const runtime = getRuntimeConfig(req);
+  const { token, cardDb, logDb, PROP, LOG } = runtime;
+
+  if (!token || !cardDb) {
+    return res.status(500).json({
+      error:
+        "Thiếu NOTION_TOKEN hoặc SRS_CARD_DB trong environment variables hoặc request headers",
+    });
+  }
+
   try {
-    const NOTION_TOKEN = process.env.NOTION_TOKEN;
-    const SRS_CARD_DB = process.env.SRS_CARD_DB;
-    const SRS_LOG_DB = process.env.SRS_LOG_DB;
+    // ════════════════════════════════════════════
+    // GET
+    // ════════════════════════════════════════════
+    if (req.method === "GET") {
+      const { action = "due", deck, limit = "50" } = req.query;
 
-    if (!NOTION_TOKEN || !SRS_CARD_DB || !SRS_LOG_DB) {
-      return res.status(500).json({ error: "Missing env variables" });
-    }
-
-    const headers = {
-      Authorization: `Bearer ${NOTION_TOKEN}`,
-      "Content-Type": "application/json",
-      "Notion-Version": "2022-06-28",
-    };
-
-    const action = req.method === "GET" ? req.query.action : req.body.action;
-
-    // ========================
-    // GET DUE CARDS
-    // ========================
-    if (action === "due") {
-      const r = await fetch(
-        `https://api.notion.com/v1/databases/${SRS_CARD_DB}/query`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({}),
+      // ── due: thẻ đến hạn hôm nay ─────────────
+      if (action === "due") {
+        const today = new Date().toLocaleDateString("en-CA");
+        let filter = {
+          or: [
+            { property: PROP.next, date: { on_or_before: today } },
+            { property: PROP.next, date: { is_empty: true } },
+          ],
+        };
+        if (deck && deck !== "all") {
+          filter = {
+            and: [filter, { property: PROP.deck, select: { equals: deck } }],
+          };
         }
-      );
-
-      const data = await r.json();
-
-      const cards = data.results.map((p) => ({
-        id: p.id,
-        front: p.properties.Front?.rich_text?.[0]?.plain_text || "",
-        back: p.properties.Back?.rich_text?.[0]?.plain_text || "",
-        deck: p.properties.Deck?.select?.name || "",
-      }));
-
-      return res.json({ cards });
-    }
-
-    // ========================
-    // CREATE CARD
-    // ========================
-    if (action === "create") {
-      const { front, back, deck } = req.body;
-
-      const r = await fetch("https://api.notion.com/v1/pages", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          parent: { database_id: SRS_CARD_DB },
-          properties: {
-            Front: { rich_text: [{ text: { content: front } }] },
-            Back: { rich_text: [{ text: { content: back } }] },
-            Deck: deck ? { select: { name: deck } } : null,
-          },
-        }),
-      });
-
-      const data = await r.json();
-
-      if (data.object === "error") {
-        return res.status(500).json(data);
+        const data = await notionQuery(token, cardDb, filter, [
+          { property: PROP.next, direction: "ascending" },
+        ]);
+        const cards = data.results
+          .map((p) => parseCard(p, PROP))
+          .filter((c) => c.front);
+        return res.status(200).json({ cards, count: cards.length });
       }
 
-      return res.json({ ok: true });
-    }
-
-    // ========================
-    // RATE CARD + LOG
-    // ========================
-    if (action === "rate") {
-      const { cardId, rating } = req.body;
-
-      // UPDATE CARD (simple version)
-      await fetch(`https://api.notion.com/v1/pages/${cardId}`, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify({
-          properties: {},
-        }),
-      });
-
-      // CREATE LOG (IMPORTANT FIX HERE)
-      const logRes = await fetch("https://api.notion.com/v1/pages", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          parent: { database_id: SRS_LOG_DB },
-          properties: {
-            ID: {
-              title: [
-                {
-                  text: { content: `Review ${new Date().toISOString()}` },
-                },
-              ],
-            },
-            Card: {
-              relation: [{ id: cardId }],
-            },
-            Date: {
-              date: { start: new Date().toISOString() },
-            },
-            Rating: {
-              number: rating,
-            },
-            Result: {
-              rich_text: [
-                {
-                  text: { content: rating >= 3 ? "Good" : "Again" },
-                },
-              ],
-            },
-            Deck: {
-              rich_text: [
-                {
-                  text: { content: "Default" },
-                },
-              ],
-            },
-          },
-        }),
-      });
-
-      const logData = await logRes.json();
-
-      if (logData.object === "error") {
-        return res.status(500).json(logData);
+      // ── stats: tổng quan ──────────────────────
+      if (action === "stats") {
+        const data = await notionQuery(token, cardDb, null, null);
+        const all = data.results;
+        const today = new Date().toLocaleDateString("en-CA");
+        // Deck breakdown
+        const deckMap = {};
+        all.forEach((p) => {
+          const d = p.properties[PROP.deck]?.select?.name || "General";
+          deckMap[d] = (deckMap[d] || 0) + 1;
+        });
+        return res.status(200).json({
+          total: all.length,
+          due: all.filter((p) => {
+            const d = p.properties[PROP.next]?.date?.start;
+            return !d || d <= today;
+          }).length,
+          new: all.filter((p) => getStatus(p.properties[PROP.status]) === "New")
+            .length,
+          mastered: all.filter(
+            (p) => getStatus(p.properties[PROP.status]) === "Mastered"
+          ).length,
+          decks: deckMap,
+        });
       }
 
-      return res.json({ ok: true });
+      // ── logs: lịch sử review ──────────────────
+      if (action === "logs") {
+        if (!logDb) {
+          return res.status(200).json({
+            logs: [],
+            warning:
+              "SRS_LOG_DB chưa được cấu hình trong Vercel environment variables",
+          });
+        }
+        const n = Math.min(parseInt(limit) || 50, 100);
+        const data = await notionQuery(token, logDb, null, [
+          { property: LOG.date, direction: "descending" },
+        ]);
+        const logs = data.results.slice(0, n).map((page) => {
+          const pr = page.properties;
+          const ratingStr = pr[LOG.rating]?.select?.name || "0";
+          const ratingNum = parseInt(ratingStr) || 0;
+          return {
+            id: page.id,
+            cardFront: getText(pr[LOG.title]),
+            date: pr[LOG.date]?.date?.start || null,
+            rating: ratingNum,
+            newInterval: pr[LOG.interval]?.number ?? null,
+            newEf: pr[LOG.ef]?.number ?? null,
+            deck: pr[LOG.deck]?.select?.name || null,
+            pass: ratingNum >= 3,
+          };
+        });
+        return res.status(200).json({ logs, total: data.results.length });
+      }
+
+      return res.status(400).json({ error: "Unknown action: " + action });
     }
 
-    // ========================
-    // GET LOGS
-    // ========================
-    if (action === "logs") {
-      const r = await fetch(
-        `https://api.notion.com/v1/databases/${SRS_LOG_DB}/query`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            sorts: [
-              {
-                property: "Date",
-                direction: "descending",
+    // ════════════════════════════════════════════
+    // POST
+    // ════════════════════════════════════════════
+    if (req.method === "POST") {
+      // Parse body (handle both pre-parsed and raw string)
+      const body =
+        typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+
+      // ── review: cập nhật SM-2 trên thẻ ────────
+      if (body.action === "review") {
+        const { pageId, newEf, newInterval, newReps, nextDate, newStatus } =
+          body;
+        if (!pageId) return res.status(400).json({ error: "Missing pageId" });
+
+        await notionPatch(token, pageId, {
+          [PROP.ef]: { number: parseFloat(parseFloat(newEf).toFixed(4)) },
+          [PROP.interval]: { number: newInterval },
+          [PROP.reps]: { number: newReps },
+          [PROP.next]: { date: { start: nextDate } },
+          [PROP.status]: { status: { name: newStatus } },
+        });
+        return res.status(200).json({ ok: true });
+      }
+
+      // ── log: ghi vào Review Log DB ─────────────
+      if (body.action === "log") {
+        if (!logDb) {
+          return res.status(400).json({
+            error: "SRS_LOG_DB chưa cấu hình",
+            hint: "Thêm SRS_LOG_DB=<review-log-db-id> vào Vercel Environment Variables",
+          });
+        }
+
+        const {
+          cardId,
+          cardFront,
+          cardDeck,
+          date,
+          rating,
+          newInterval,
+          newEf,
+        } = body;
+
+        // Chuẩn hóa date
+        const dateStr =
+          typeof date === "string" && date.length >= 10
+            ? date.substring(0, 10)
+            : new Date().toLocaleDateString("en-CA");
+
+        // Dùng cardFront làm Name để dễ đọc trong Notion
+        const nameText = cardFront
+          ? cardFront.substring(0, 80)
+          : `LOG-${dateStr}`;
+
+        const ratingNum = parseInt(rating) || 0;
+
+        const props = {
+          [LOG.title]: { title: [{ text: { content: nameText } }] },
+          [LOG.date]: { date: { start: dateStr } },
+          [LOG.rating]: { select: { name: String(ratingNum) } },
+          [LOG.interval]: { number: newInterval },
+          [LOG.ef]: { number: parseFloat(parseFloat(newEf).toFixed(4)) },
+        };
+
+        // Thêm các field optional
+        if (cardId) props[LOG.card] = { relation: [{ id: cardId }] };
+        if (cardDeck) props[LOG.deck] = { select: { name: cardDeck } };
+        props[LOG.result] = {
+          select: { name: ratingNum >= 3 ? "Pass" : "Fail" },
+        };
+
+        await notionCreate(token, logDb, props);
+        return res.status(200).json({ ok: true });
+      }
+
+      // ── create: tạo 1 thẻ mới ──────────────────
+      if (body.action === "create") {
+        const { front, back, deck, tags } = body;
+        if (!front?.trim() || !back?.trim()) {
+          return res.status(400).json({ error: "Front và Back là bắt buộc" });
+        }
+
+        const today = new Date().toLocaleDateString("en-CA");
+        const props = {
+          [PROP.front]: {
+            title: [{ text: { content: front.trim().substring(0, 2000) } }],
+          },
+          [PROP.back]: {
+            rich_text: [{ text: { content: back.trim().substring(0, 2000) } }],
+          },
+          [PROP.ef]: { number: 2.5 },
+          [PROP.interval]: { number: 1 },
+          [PROP.reps]: { number: 0 },
+          [PROP.next]: { date: { start: today } },
+          [PROP.status]: { status: { name: "New" } },
+        };
+
+        if (deck?.trim()) {
+          props[PROP.deck] = { select: { name: deck.trim() } };
+        }
+        if (tags?.length) {
+          props[PROP.tags] = {
+            multi_select: tags
+              .map((t) => ({ name: String(t).trim() }))
+              .filter((t) => t.name),
+          };
+        }
+
+        const page = await notionCreate(token, cardDb, props);
+        return res
+          .status(200)
+          .json({ ok: true, id: page.id, front: front.trim() });
+      }
+
+      // ── import: bulk tạo thẻ từ CSV ────────────
+      if (body.action === "import") {
+        const { cards } = body;
+        if (!Array.isArray(cards) || !cards.length) {
+          return res.status(400).json({ error: "Không có thẻ nào để import" });
+        }
+
+        const today = new Date().toLocaleDateString("en-CA");
+        const results = { success: 0, failed: 0, errors: [] };
+
+        for (const card of cards) {
+          if (!card.front?.trim() || !card.back?.trim()) {
+            results.failed++;
+            results.errors.push(
+              `Bỏ qua thẻ thiếu Front/Back: "${card.front || "(trống)"}"`
+            );
+            continue;
+          }
+
+          try {
+            const props = {
+              [PROP.front]: {
+                title: [
+                  { text: { content: card.front.trim().substring(0, 2000) } },
+                ],
               },
-            ],
-          }),
+              [PROP.back]: {
+                rich_text: [
+                  { text: { content: card.back.trim().substring(0, 2000) } },
+                ],
+              },
+              [PROP.ef]: { number: 2.5 },
+              [PROP.interval]: { number: 1 },
+              [PROP.reps]: { number: 0 },
+              [PROP.next]: { date: { start: today } },
+              [PROP.status]: { status: { name: "New" } },
+            };
+
+            if (card.deck?.trim()) {
+              props[PROP.deck] = { select: { name: card.deck.trim() } };
+            }
+            if (card.tags?.length) {
+              props[PROP.tags] = {
+                multi_select: card.tags
+                  .map((t) => ({ name: String(t).trim() }))
+                  .filter((t) => t.name),
+              };
+            }
+
+            await notionCreate(token, cardDb, props);
+            results.success++;
+
+            // Delay nhỏ tránh rate limit Notion (3 req/s)
+            await new Promise((r) => setTimeout(r, 340));
+          } catch (e) {
+            results.failed++;
+            results.errors.push(
+              `"${card.front.substring(0, 40)}": ${e.message}`
+            );
+          }
         }
-      );
 
-      const data = await r.json();
+        return res.status(200).json(results);
+      }
 
-      const logs = data.results.map((p) => ({
-        id: p.id,
-        rating: p.properties.Rating?.number,
-        date: p.properties.Date?.date?.start,
-        result: p.properties.Result?.rich_text?.[0]?.plain_text,
-      }));
-
-      return res.json({ logs });
+      return res.status(400).json({ error: "Unknown action: " + body.action });
     }
 
-    return res.status(400).json({ error: "Invalid action" });
+    return res.status(405).json({ error: "Method not allowed" });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: "Server error", detail: err.message });
   }
 }
 
@@ -284,7 +407,7 @@ function getRuntimeConfig(req) {
   const LOG = {
     title: header(
       "x-srs-log-prop-title",
-      process.env.SRS_LOG_PROP_TITLE || "ID"
+      process.env.SRS_LOG_PROP_TITLE || "Name"
     ),
     card: header(
       "x-srs-log-prop-card",
