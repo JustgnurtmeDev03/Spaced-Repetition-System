@@ -138,7 +138,7 @@ export default async function handler(req, res) {
           [PROP.interval]: { number: newInterval },
           [PROP.reps]: { number: newReps },
           [PROP.next]: { date: { start: nextDate } },
-          [PROP.status]: { status: { name: newStatus } },
+          [PROP.status]: { select: { name: newStatus } },
         });
         return res.status(200).json({ ok: true });
       }
@@ -213,7 +213,7 @@ export default async function handler(req, res) {
           [PROP.interval]: { number: 1 },
           [PROP.reps]: { number: 0 },
           [PROP.next]: { date: { start: today } },
-          [PROP.status]: { status: { name: "New" } },
+          [PROP.status]: { select: { name: "New" } },
         };
 
         if (deck?.trim()) {
@@ -268,7 +268,7 @@ export default async function handler(req, res) {
               [PROP.interval]: { number: 1 },
               [PROP.reps]: { number: 0 },
               [PROP.next]: { date: { start: today } },
-              [PROP.status]: { status: { name: "New" } },
+              [PROP.status]: { select: { name: "New" } },
             };
 
             if (card.deck?.trim()) {

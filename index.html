@@ -2121,6 +2121,15 @@
           "x-srs-prop-interval": cfg.interval || "Interval",
           "x-srs-prop-reps": cfg.reps || "Repetitions",
           "x-srs-prop-status": cfg.status || "Status",
+
+          "x-srs-log-prop-title": cfg.status || "ID",
+          "x-srs-log-prop-card": cfg.status || "Card",
+          "x-srs-log-prop-date": cfg.status || "Date",
+          "x-srs-log-prop-rating": cfg.status || "Rating",
+          "x-srs-log-prop-interval": cfg.status || "New Interval",
+          "x-srs-log-prop-ef": cfg.status || "New EF",
+          "x-srs-log-prop-deck": cfg.status || "Deck",
+          "x-srs-log-prop-result": cfg.status || "Result",
           ...extra,
         };
       }
@@ -2481,7 +2490,7 @@
           newReps = reps + 1;
           if (reps === 0) newInterval = 1;
           else if (reps === 1) newInterval = 6;
-          else newInterval = Math.round(interval * ef);
+          else newInterval = Math.round(interval * newEf);
         }
         const nextDate = new Date();
         nextDate.setDate(nextDate.getDate() + newInterval);
@@ -2574,11 +2583,7 @@
                 e.hint || "",
                 e.detail || ""
               );
-              if (r2.status === 400 && e.error?.includes("SRS_LOG_DB")) {
-                toast(
-                  "⚠️ Review Log chưa cấu hình — kiểm tra SRS_LOG_DB trong Vercel"
-                );
-              }
+              toast(`⚠️ Log thất bại: ${e.error || e.detail || r2.status}`);
             }
           }
         } catch (err) {
