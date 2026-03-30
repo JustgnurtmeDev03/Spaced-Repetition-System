@@ -13,42 +13,17 @@
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-srs-token, x-srs-card-db, x-srs-log-db, x-srs-prop-front, x-srs-prop-back, x-srs-prop-deck, x-srs-prop-tags, x-srs-prop-next, x-srs-prop-ef, x-srs-prop-interval, x-srs-prop-reps, x-srs-prop-status, x-srs-log-prop-title, x-srs-log-prop-card, x-srs-log-prop-date, x-srs-log-prop-rating, x-srs-log-prop-interval, x-srs-log-prop-ef, x-srs-log-prop-deck, x-srs-log-prop-result");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const token  = process.env.NOTION_TOKEN;
-  const cardDb = (process.env.SRS_CARD_DB || "").replace(/-/g, "");
-  const logDb  = (process.env.SRS_LOG_DB  || "").replace(/-/g, "");
+  const runtime = getRuntimeConfig(req);
+  const { token, cardDb, logDb, PROP, LOG } = runtime;
 
   if (!token || !cardDb) {
     return res.status(500).json({
-      error: "Thiếu NOTION_TOKEN hoặc SRS_CARD_DB trong environment variables",
+      error: "Thiếu NOTION_TOKEN hoặc SRS_CARD_DB trong environment variables hoặc request headers",
     });
   }
-
-  // Flashcard DB property names
-  const PROP = {
-    front:    process.env.SRS_PROP_FRONT    || "Front",
-    back:     process.env.SRS_PROP_BACK     || "Back",
-    deck:     process.env.SRS_PROP_DECK     || "Deck",
-    tags:     process.env.SRS_PROP_TAGS     || "Tags",
-    next:     process.env.SRS_PROP_NEXT     || "Next Review",
-    ef:       process.env.SRS_PROP_EF       || "EF",
-    interval: process.env.SRS_PROP_INTERVAL || "Interval",
-    reps:     process.env.SRS_PROP_REPS     || "Repetitions",
-    status:   process.env.SRS_PROP_STATUS   || "Status",
-  };
-
-  // Review Log DB property names
-  const LOG = {
-    card:     process.env.SRS_LOG_PROP_CARD     || "Card",
-    date:     process.env.SRS_LOG_PROP_DATE     || "Date",
-    rating:   process.env.SRS_LOG_PROP_RATING   || "Rating",
-    interval: process.env.SRS_LOG_PROP_INTERVAL || "New Interval",
-    ef:       process.env.SRS_LOG_PROP_EF       || "New EF",
-    deck:     process.env.SRS_LOG_PROP_DECK     || "Deck",
-    result:   process.env.SRS_LOG_PROP_RESULT   || "Result",
-  };
 
   try {
     // ════════════════════════════════════════════
@@ -119,7 +94,7 @@ export default async function handler(req, res) {
           const ratingNum = parseInt(ratingStr) || 0;
           return {
             id:          page.id,
-            cardFront:   getText(pr["Name"]),
+            cardFront:   getText(pr[LOG.title]),
             date:        pr[LOG.date]?.date?.start || null,
             rating:      ratingNum,
             newInterval: pr[LOG.interval]?.number ?? null,
@@ -182,7 +157,7 @@ export default async function handler(req, res) {
         const ratingNum = parseInt(rating) || 0;
 
         const props = {
-          "Name":          { title:  [{ text: { content: nameText } }] },
+          [LOG.title]:     { title:  [{ text: { content: nameText } }] },
           [LOG.date]:      { date:   { start: dateStr } },
           [LOG.rating]:    { select: { name: String(ratingNum) } },
           [LOG.interval]:  { number: newInterval },
@@ -346,6 +321,48 @@ async function notionPatch(token, pageId, properties) {
     throw new Error(`Notion PATCH ${res.status}: ${text.substring(0, 200)}`);
   }
   return res.json();
+}
+
+function getHeader(req, name) {
+  const raw = req.headers?.[name.toLowerCase()];
+  return Array.isArray(raw) ? raw[0] : raw;
+}
+
+function getRuntimeConfig(req) {
+  const header = (name, fallback = "") => {
+    const v = getHeader(req, name);
+    return (typeof v === "string" && v.trim()) ? v.trim() : fallback;
+  };
+
+  const token = header("x-srs-token", process.env.NOTION_TOKEN || "");
+  const cardDb = header("x-srs-card-db", (process.env.SRS_CARD_DB || "")).replace(/-/g, "");
+  const logDb  = header("x-srs-log-db", (process.env.SRS_LOG_DB || "")).replace(/-/g, "");
+
+  const PROP = {
+    title:    header("x-srs-prop-front",    process.env.SRS_PROP_FRONT    || "Front"),
+    front:    header("x-srs-prop-front",    process.env.SRS_PROP_FRONT    || "Front"),
+    back:     header("x-srs-prop-back",     process.env.SRS_PROP_BACK     || "Back"),
+    deck:     header("x-srs-prop-deck",     process.env.SRS_PROP_DECK     || "Deck"),
+    tags:     header("x-srs-prop-tags",     process.env.SRS_PROP_TAGS     || "Tags"),
+    next:     header("x-srs-prop-next",     process.env.SRS_PROP_NEXT     || "Next Review"),
+    ef:       header("x-srs-prop-ef",       process.env.SRS_PROP_EF       || "EF"),
+    interval: header("x-srs-prop-interval", process.env.SRS_PROP_INTERVAL || "Interval"),
+    reps:     header("x-srs-prop-reps",     process.env.SRS_PROP_REPS     || "Repetitions"),
+    status:   header("x-srs-prop-status",    process.env.SRS_PROP_STATUS   || "Status"),
+  };
+
+  const LOG = {
+    title:    header("x-srs-log-prop-title",    process.env.SRS_LOG_PROP_TITLE    || "Name"),
+    card:     header("x-srs-log-prop-card",     process.env.SRS_LOG_PROP_CARD     || "Card"),
+    date:     header("x-srs-log-prop-date",     process.env.SRS_LOG_PROP_DATE     || "Date"),
+    rating:   header("x-srs-log-prop-rating",   process.env.SRS_LOG_PROP_RATING   || "Rating"),
+    interval: header("x-srs-log-prop-interval", process.env.SRS_LOG_PROP_INTERVAL || "New Interval"),
+    ef:       header("x-srs-log-prop-ef",       process.env.SRS_LOG_PROP_EF       || "New EF"),
+    deck:     header("x-srs-log-prop-deck",     process.env.SRS_LOG_PROP_DECK     || "Deck"),
+    result:   header("x-srs-log-prop-result",   process.env.SRS_LOG_PROP_RESULT   || "Result"),
+  };
+
+  return { token, cardDb, logDb, PROP, LOG };
 }
 
 async function notionCreate(token, dbId, properties) {
