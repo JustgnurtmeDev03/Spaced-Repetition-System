@@ -257,6 +257,107 @@
         margin-top: 4px;
       }
 
+      /* ═══════════════════════════════════════════════════════════════
+   TOAST NOTIFICATION
+   ═══════════════════════════════════════════════════════════════ */
+      .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .toast {
+        min-width: 300px;
+        max-width: 450px;
+        padding: 14px 18px;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease-out;
+        border-left: 4px solid;
+      }
+
+      .toast.success {
+        border-left-color: #10b981;
+      }
+      .toast.error {
+        border-left-color: #ef4444;
+      }
+      .toast.warning {
+        border-left-color: #f59e0b;
+      }
+      .toast.info {
+        border-left-color: #3b82f6;
+      }
+
+      .toast-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .toast.success .toast-icon {
+        color: #10b981;
+      }
+      .toast.error .toast-icon {
+        color: #ef4444;
+      }
+      .toast.warning .toast-icon {
+        color: #f59e0b;
+      }
+      .toast.info .toast-icon {
+        color: #3b82f6;
+      }
+
+      .toast-message {
+        flex: 1;
+        font-size: 14px;
+        color: #1f2937;
+        line-height: 1.4;
+      }
+
+      .toast-close {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+      }
+
+      .toast-close:hover {
+        color: #4b5563;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+
       /* ══════════════════════════════════════════
    TAB NAVIGATION
 ══════════════════════════════════════════ */
@@ -1510,6 +1611,21 @@
               <div class="stat-lbl">Đã thành thạo</div>
             </div>
           </div>
+          <!-- Quản lý bộ thẻ -->
+          <div class="mt-8 border-t pt-4">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-semibold text-gray-700">📚 Quản lý bộ thẻ</h3>
+              <button
+                onclick="loadDecks()"
+                class="text-xs text-blue-600 hover:underline"
+              >
+                ↻ Làm mới
+              </button>
+            </div>
+            <div id="deck-list" class="space-y-2 text-sm">
+              <p class="text-gray-500">Nhấn "Làm mới" để tải danh sách</p>
+            </div>
+          </div>
 
           <div class="card">
             <div class="sec-title">Chọn bộ thẻ</div>
@@ -2094,6 +2210,35 @@
     <div class="toast" id="toast"></div>
 
     <script>
+      // ═══════════════════════════════════════════════════════════════
+      // TOAST NOTIFICATION SYSTEM
+      // ═══════════════════════════════════════════════════════════════
+      function showToast(message, type = "info", duration = 4000) {
+        const container = document.getElementById("toast-container");
+
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+
+        const icons = {
+          success: "✓",
+          error: "✕",
+          warning: "⚠",
+          info: "ℹ",
+        };
+
+        toast.innerHTML = `
+    <span class="toast-icon">${icons[type] || icons.info}</span>
+    <span class="toast-message">${message}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+  `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.animation = "slideOut 0.3s ease-out forwards";
+          setTimeout(() => toast.remove(), 300);
+        }, duration);
+      }
       // ═══════════════════════════════════════════════════════════════════
       // STATE
       // ═══════════════════════════════════════════════════════════════════
@@ -2794,18 +2939,14 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok)
             throw new Error(data.error || data.detail || "Tạo thẻ thất bại");
-          showAlert(
-            "create-alert",
-            "success",
-            `✓ Đã tạo thẻ "${front.substring(0, 50)}"${
-              deck ? ` vào bộ ${deck}` : ""
-            }`
-          );
+
+          toast(`✓ ${data.message || "Đã tạo thẻ"}`, "success");
+
           clearCreateForm();
           S.logsLoaded = false;
           await fetchCards(true);
         } catch (err) {
-          showAlert("create-alert", "error", "Lỗi: " + err.message);
+          toast(err.message, "error");
         } finally {
           if (btn) {
             btn.textContent = "Tạo thẻ";
@@ -2919,15 +3060,14 @@
           document.getElementById("csv-input").value = "";
           S.importData = [];
 
-          const msg =
-            data.failed > 0
-              ? `✓ Import hoàn tất: ${data.success} thẻ thành công, ${data.failed} thất bại`
-              : `✓ Import thành công ${data.success} thẻ vào Notion!`;
-          showAlert("create-alert", "success", msg);
+          if (data.success > 0)
+            toast(`✓ Import thành công ${data.success} thẻ!`, "success");
+          if (data.failed > 0) toast(`⚠ ${data.failed} thẻ bị lỗi`, "warning");
+
           await fetchCards(true);
         } catch (err) {
           progress.classList.remove("show");
-          showAlert("create-alert", "error", "Lỗi import: " + err.message);
+          toast("Lỗi import: " + err.message, "error");
           document.querySelector("#preview-wrap .btn-primary").disabled = false;
         }
       }
@@ -3353,6 +3493,127 @@
         document.body.appendChild(container);
         return container;
       }
+      // ═══════════════════════════════════════════════════════════════
+      // QUẢN LÝ BỘ THẺ
+      // ═══════════════════════════════════════════════════════════════
+      async function loadDecks() {
+        const deckList = document.getElementById("deck-list");
+        if (!deckList) return;
+
+        deckList.innerHTML = `<p class="text-gray-500 text-sm">Đang tải...</p>`;
+
+        try {
+          const res = await fetch("/api/srs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...getHeaders() },
+            body: JSON.stringify({ action: "get-decks" }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || !data.decks) {
+            throw new Error(data.error || "Không tải được danh sách");
+          }
+
+          if (data.decks.length === 0) {
+            deckList.innerHTML = `<p class="text-gray-500 text-sm">Chưa có bộ thẻ nào</p>`;
+            return;
+          }
+
+          deckList.innerHTML = data.decks
+            .map(
+              (deck) => `
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div>
+          <div class="font-medium text-gray-900">${escapeHtml(deck.name)}</div>
+          <div class="text-xs text-gray-500 mt-1">
+            <span class="text-blue-600">${deck.due} đến hạn</span> · 
+            <span class="text-green-600">${deck.new} mới</span> · 
+            <span class="text-purple-600">${deck.mastered} thành thạo</span> · 
+            Tổng: ${deck.total}
+          </div>
+        </div>
+        <button 
+          onclick="deleteDeck('${escapeHtml(deck.name)}')"
+          class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+        >
+          🗑 Xóa bộ
+        </button>
+      </div>
+    `
+            )
+            .join("");
+        } catch (e) {
+          deckList.innerHTML = `<p class="text-red-600 text-sm">Lỗi: ${e.message}</p>`;
+          showToast("Không tải được danh sách bộ thẻ", "error");
+        }
+      }
+
+      async function deleteDeck(deckName) {
+        if (
+          !confirm(
+            `⚠️ Bạn có chắc muốn xóa toàn bộ "${deckName}"?\n\nHành động này KHÔNG thể hoàn tác!`
+          )
+        ) {
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/srs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...getHeaders() },
+            body: JSON.stringify({ action: "delete-deck", deckName }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || "Xóa thất bại");
+          }
+
+          showToast(
+            data.message || `Đã xóa ${data.deleted} thẻ khỏi bộ "${deckName}"`,
+            "success"
+          );
+          loadDecks();
+        } catch (e) {
+          showToast(e.message, "error");
+        }
+      }
+
+      function renderHistoryTable(logs) {
+        const tbody = document.querySelector("#tab-history tbody"); // Kiểm tra ID bảng lịch sử của bạn
+        if (!tbody) return;
+        if (!logs || logs.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-500">Chưa có lịch sử</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = logs
+          .map(
+            (log) => `
+    <tr class="border-b">
+      <td class="py-2 px-2 text-sm">${log.date || "-"}</td>
+      <td class="py-2 px-2 text-sm font-medium truncate max-w-xs">${
+        log.cardFront || "-"
+      }</td>
+      <td class="py-2 px-2 text-sm text-gray-600">${log.deck || "-"}</td>
+      <td class="py-2 px-2 text-sm">${log.rating}</td>
+      <td class="py-2 px-2 text-sm ${
+        log.pass ? "text-green-600" : "text-red-600"
+      }">${log.pass ? "Đúng" : "Sai"}</td>
+      <td class="py-2 px-2 text-sm">${
+        log.newInterval ? "→ " + log.newInterval : "-"
+      }</td>
+      <td class="py-2 px-2 text-sm">${
+        log.newEf ? log.newEf.toFixed(2) : "-"
+      }</td>
+    </tr>
+  `
+          )
+          .join("");
+      }
     </script>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
   </body>
 </html>

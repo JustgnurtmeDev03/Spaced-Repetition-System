@@ -194,7 +194,10 @@ export default async function handler(req, res) {
 
         try {
           await notionCreate(token, logDb, props);
-          return res.status(200).json({ ok: true });
+          return res.status(200).json({
+            ok: true,
+            message: "Đã lưu lịch sử review",
+          });
         } catch (e) {
           console.error("Log creation error:", e.message);
           return res.status(500).json({
@@ -239,9 +242,107 @@ export default async function handler(req, res) {
         }
 
         const page = await notionCreate(token, cardDb, props);
-        return res
-          .status(200)
-          .json({ ok: true, id: page.id, front: front.trim() });
+        return res.status(200).json({
+          ok: true,
+          id: page.id,
+          front: front.trim(),
+          message: `Đã tạo thẻ trong bộ "${deck || "General"}"`,
+        });
+      }
+
+      // ── get-decks: lấy danh sách tất cả bộ thẻ ────────────
+      if (body.action === "get-decks") {
+        try {
+          const data = await notionQuery(token, cardDb, null, null);
+          const deckMap = {};
+
+          data.results.forEach((page) => {
+            const deckName =
+              page.properties[PROP.deck]?.select?.name || "General";
+            const status = page.properties[PROP.status]?.select?.name || "New";
+
+            if (!deckMap[deckName]) {
+              deckMap[deckName] = { total: 0, new: 0, due: 0, mastered: 0 };
+            }
+            deckMap[deckName].total++;
+
+            if (status === "New") deckMap[deckName].new++;
+            if (status === "Mastered") deckMap[deckName].mastered++;
+          });
+
+          // Tính thẻ due
+          const today = new Date().toLocaleDateString("en-CA");
+          const dueData = await notionQuery(token, cardDb, {
+            or: [
+              { property: PROP.next, date: { on_or_before: today } },
+              { property: PROP.next, date: { is_empty: true } },
+            ],
+          });
+
+          dueData.results.forEach((page) => {
+            const deckName =
+              page.properties[PROP.deck]?.select?.name || "General";
+            if (deckMap[deckName]) deckMap[deckName].due++;
+          });
+
+          const decks = Object.entries(deckMap).map(([name, stats]) => ({
+            name,
+            ...stats,
+          }));
+
+          return res.status(200).json({ decks });
+        } catch (e) {
+          return res.status(500).json({
+            error: "Lấy danh sách bộ thẻ thất bại",
+            detail: e.message,
+          });
+        }
+      }
+
+      // ── delete-deck: xóa tất cả thẻ trong bộ ────────────
+      if (body.action === "delete-deck") {
+        const { deckName } = body;
+        if (!deckName?.trim()) {
+          return res.status(400).json({ error: "Thiếu tên bộ thẻ (deckName)" });
+        }
+
+        try {
+          const data = await notionQuery(token, cardDb, {
+            property: PROP.deck,
+            select: { equals: deckName.trim() },
+          });
+
+          const cardsToDelete = data.results;
+          if (cardsToDelete.length === 0) {
+            return res.status(200).json({
+              ok: true,
+              deleted: 0,
+              message: "Không có thẻ nào trong bộ này",
+            });
+          }
+
+          for (const card of cardsToDelete) {
+            await fetch(`https://api.notion.com/v1/pages/${card.id}`, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Notion-Version": "2022-06-28",
+              },
+            });
+            await new Promise((r) => setTimeout(r, 340));
+          }
+
+          return res.status(200).json({
+            ok: true,
+            deleted: cardsToDelete.length,
+            message: `Đã xóa ${cardsToDelete.length} thẻ khỏi bộ "${deckName}"`,
+          });
+        } catch (e) {
+          return res.status(500).json({
+            error: "Xóa bộ thẻ thất bại",
+            detail: e.message,
+          });
+        }
       }
 
       // ── import: bulk tạo thẻ từ CSV ────────────
