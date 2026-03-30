@@ -1,1320 +1,2152 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SRS Review Session</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SRS Review Session</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap");
 
-*{box-sizing:border-box;margin:0;padding:0}
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-:root{
-  --bg:#f8f7f4;
-  --bg2:#eeede9;
-  --bg3:#e3e1db;
-  --surface:#ffffff;
-  --text:#1a1917;
-  --text2:#6b6a66;
-  --text3:#a8a7a3;
-  --bd:rgba(55,53,47,.1);
-  --bd2:rgba(55,53,47,.2);
-  --green:#1d9e75;
-  --green-l:#e1f5ee;
-  --green-d:#085041;
-  --red:#e24b4a;
-  --red-l:#fcebeb;
-  --amber:#ef9f27;
-  --amber-l:#faeeda;
-  --blue:#378add;
-  --blue-l:#e6f1fb;
-  --r:10px;
-  --rl:16px;
-  --card-font:'Crimson Pro',Georgia,serif;
-  --ui-font:'DM Sans',-apple-system,sans-serif;
-}
+      :root {
+        --bg: #f8f7f4;
+        --bg2: #eeede9;
+        --bg3: #e3e1db;
+        --surface: #ffffff;
+        --text: #1a1917;
+        --text2: #6b6a66;
+        --text3: #a8a7a3;
+        --bd: rgba(55, 53, 47, 0.1);
+        --bd2: rgba(55, 53, 47, 0.2);
+        --green: #1d9e75;
+        --green-l: #e1f5ee;
+        --green-d: #085041;
+        --red: #e24b4a;
+        --red-l: #fcebeb;
+        --amber: #ef9f27;
+        --amber-l: #faeeda;
+        --blue: #378add;
+        --blue-l: #e6f1fb;
+        --r: 10px;
+        --rl: 16px;
+        --card-font: "Crimson Pro", Georgia, serif;
+        --ui-font: "DM Sans", -apple-system, sans-serif;
+      }
 
-@media(prefers-color-scheme:dark){
-  :root{
-    --bg:#1a1917;--bg2:#242320;--bg3:#2e2c28;
-    --surface:#242320;--text:#e8e7e3;--text2:#9b9a96;--text3:#6b6a66;
-    --bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.15);
-    --green-l:#04342c;--red-l:#501313;--amber-l:#412402;--blue-l:#042c53;
-  }
-}
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1a1917;
+          --bg2: #242320;
+          --bg3: #2e2c28;
+          --surface: #242320;
+          --text: #e8e7e3;
+          --text2: #9b9a96;
+          --text3: #6b6a66;
+          --bd: rgba(255, 255, 255, 0.08);
+          --bd2: rgba(255, 255, 255, 0.15);
+          --green-l: #04342c;
+          --red-l: #501313;
+          --amber-l: #412402;
+          --blue-l: #042c53;
+        }
+      }
 
-body{
-  font-family:var(--ui-font);
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  font-size:14px;
-  line-height:1.5;
-}
+      body {
+        font-family: var(--ui-font);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        font-size: 14px;
+        line-height: 1.5;
+      }
 
-/* ── SCREENS ── */
-.screen{display:none;min-height:100vh}
-.screen.active{display:flex;flex-direction:column}
+      /* ── SCREENS ── */
+      .screen {
+        display: none;
+        min-height: 100vh;
+      }
+      .screen.active {
+        display: flex;
+        flex-direction: column;
+      }
 
-/* ── SHARED LAYOUT ── */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:1rem 1.5rem;border-bottom:.5px solid var(--bd);
-  background:var(--surface);
-  flex-shrink:0;
-}
-.logo{
-  font-family:var(--card-font);font-size:17px;font-weight:600;
-  letter-spacing:-.02em;color:var(--text);
-  display:flex;align-items:center;gap:8px;
-}
-.logo-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--green);flex-shrink:0;
-}
-.page{max-width:760px;margin:0 auto;padding:2rem 1.5rem;width:100%}
+      /* ── SHARED LAYOUT ── */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.5rem;
+        border-bottom: 0.5px solid var(--bd);
+        background: var(--surface);
+        flex-shrink: 0;
+      }
+      .logo {
+        font-family: var(--card-font);
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .logo-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        flex-shrink: 0;
+      }
+      .page {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+        width: 100%;
+      }
 
-/* ── BUTTONS ── */
-.btn{
-  padding:8px 18px;border-radius:var(--r);
-  border:.5px solid var(--bd2);background:var(--bg2);
-  color:var(--text);font-size:13px;font-family:var(--ui-font);
-  cursor:pointer;transition:all .15s;font-weight:400;
-}
-.btn:hover{background:var(--bg3);border-color:var(--text3)}
-.btn-primary{
-  background:var(--green);color:#fff;border-color:var(--green);
-  font-weight:500;
-}
-.btn-primary:hover{background:#0f6e56;border-color:#0f6e56}
-.btn-sm{padding:5px 12px;font-size:12px}
-.btn-icon{
-  width:34px;height:34px;border-radius:50%;
-  border:.5px solid var(--bd);background:transparent;
-  color:var(--text2);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .15s;flex-shrink:0;
-}
-.btn-icon:hover{background:var(--bg2);border-color:var(--bd2)}
+      /* ── BUTTONS ── */
+      .btn {
+        padding: 8px 18px;
+        border-radius: var(--r);
+        border: 0.5px solid var(--bd2);
+        background: var(--bg2);
+        color: var(--text);
+        font-size: 13px;
+        font-family: var(--ui-font);
+        cursor: pointer;
+        transition: all 0.15s;
+        font-weight: 400;
+      }
+      .btn:hover {
+        background: var(--bg3);
+        border-color: var(--text3);
+      }
+      .btn-primary {
+        background: var(--green);
+        color: #fff;
+        border-color: var(--green);
+        font-weight: 500;
+      }
+      .btn-primary:hover {
+        background: #0f6e56;
+        border-color: #0f6e56;
+      }
+      .btn-sm {
+        padding: 5px 12px;
+        font-size: 12px;
+      }
+      .btn-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 0.5px solid var(--bd);
+        background: transparent;
+        color: var(--text2);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        flex-shrink: 0;
+      }
+      .btn-icon:hover {
+        background: var(--bg2);
+        border-color: var(--bd2);
+      }
 
-/* ── STATUS DOT ── */
-.sdot{width:7px;height:7px;border-radius:50%;background:var(--bd2);flex-shrink:0;transition:background .3s}
-.sdot.ok{background:var(--green)}
-.sdot.err{background:var(--red)}
-.sdot.loading{background:var(--amber);animation:blink 1s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+      /* ── STATUS DOT ── */
+      .sdot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--bd2);
+        flex-shrink: 0;
+        transition: background 0.3s;
+      }
+      .sdot.ok {
+        background: var(--green);
+      }
+      .sdot.err {
+        background: var(--red);
+      }
+      .sdot.loading {
+        background: var(--amber);
+        animation: blink 1s infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
 
-/* ══════════════════════════════════════════
+      /* ══════════════════════════════════════════
    SCREEN 1 — SETUP
 ══════════════════════════════════════════ */
-#screen-setup .page{
-  display:flex;flex-direction:column;gap:2rem;
-  justify-content:flex-start;padding-top:2.5rem;
-}
+      #screen-setup .page {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        justify-content: flex-start;
+        padding-top: 2.5rem;
+      }
 
-.setup-hero{margin-bottom:.5rem}
-.setup-hero h1{
-  font-family:var(--card-font);font-size:32px;font-weight:600;
-  letter-spacing:-.03em;line-height:1.2;margin-bottom:.4rem;
-}
-.setup-hero p{font-size:13px;color:var(--text2);line-height:1.7}
+      .setup-hero {
+        margin-bottom: 0.5rem;
+      }
+      .setup-hero h1 {
+        font-family: var(--card-font);
+        font-size: 32px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        margin-bottom: 0.4rem;
+      }
+      .setup-hero p {
+        font-size: 13px;
+        color: var(--text2);
+        line-height: 1.7;
+      }
 
-/* Stats strip */
-.stats-strip{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
-}
-.stat-box{
-  background:var(--surface);border:.5px solid var(--bd);
-  border-radius:var(--r);padding:.875rem;
-}
-.stat-val{
-  font-size:26px;font-weight:500;line-height:1;
-  letter-spacing:-.02em;color:var(--text);
-  font-family:var(--card-font);
-}
-.stat-lbl{font-size:11px;color:var(--text2);margin-top:4px}
+      /* Stats strip */
+      .stats-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+      .stat-box {
+        background: var(--surface);
+        border: 0.5px solid var(--bd);
+        border-radius: var(--r);
+        padding: 0.875rem;
+      }
+      .stat-val {
+        font-size: 26px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        font-family: var(--card-font);
+      }
+      .stat-lbl {
+        font-size: 11px;
+        color: var(--text2);
+        margin-top: 4px;
+      }
 
-/* Section card */
-.setup-card{
-  background:var(--surface);border:.5px solid var(--bd);
-  border-radius:var(--rl);padding:1.25rem 1.5rem;
-}
-.setup-card-title{
-  font-size:11px;font-weight:500;color:var(--text3);
-  letter-spacing:.08em;text-transform:uppercase;
-  margin-bottom:1rem;
-  display:flex;align-items:center;gap:8px;
-}
-.setup-card-title::after{content:'';flex:1;height:.5px;background:var(--bd)}
+      /* Section card */
+      .setup-card {
+        background: var(--surface);
+        border: 0.5px solid var(--bd);
+        border-radius: var(--rl);
+        padding: 1.25rem 1.5rem;
+      }
+      .setup-card-title {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .setup-card-title::after {
+        content: "";
+        flex: 1;
+        height: 0.5px;
+        background: var(--bd);
+      }
 
-/* Deck selector */
-.deck-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
-  margin-bottom:1rem;
-}
-.deck-btn{
-  padding:.875rem;border-radius:var(--r);
-  border:1.5px solid var(--bd);background:var(--bg);
-  cursor:pointer;transition:all .15s;text-align:left;
-  font-family:var(--ui-font);
-}
-.deck-btn:hover{border-color:var(--bd2);background:var(--surface)}
-.deck-btn.sel{
-  border-color:var(--green);background:var(--green-l);
-}
-.deck-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
-.deck-count{font-size:11px;color:var(--text2)}
-.deck-btn.sel .deck-name{color:var(--green-d)}
-.deck-btn.sel .deck-count{color:var(--green)}
+      /* Deck selector */
+      .deck-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 1rem;
+      }
+      .deck-btn {
+        padding: 0.875rem;
+        border-radius: var(--r);
+        border: 1.5px solid var(--bd);
+        background: var(--bg);
+        cursor: pointer;
+        transition: all 0.15s;
+        text-align: left;
+        font-family: var(--ui-font);
+      }
+      .deck-btn:hover {
+        border-color: var(--bd2);
+        background: var(--surface);
+      }
+      .deck-btn.sel {
+        border-color: var(--green);
+        background: var(--green-l);
+      }
+      .deck-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 2px;
+      }
+      .deck-count {
+        font-size: 11px;
+        color: var(--text2);
+      }
+      .deck-btn.sel .deck-name {
+        color: var(--green-d);
+      }
+      .deck-btn.sel .deck-count {
+        color: var(--green);
+      }
 
-/* Slider */
-.slider-row{
-  display:flex;align-items:center;gap:12px;
-  margin-top:.75rem;
-}
-.slider-row label{font-size:12px;color:var(--text2);white-space:nowrap}
-.slider-row input[type=range]{flex:1;accent-color:var(--green)}
-.slider-val{
-  font-size:14px;font-weight:500;min-width:28px;
-  text-align:right;color:var(--text);
-}
+      /* Slider */
+      .slider-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 0.75rem;
+      }
+      .slider-row label {
+        font-size: 12px;
+        color: var(--text2);
+        white-space: nowrap;
+      }
+      .slider-row input[type="range"] {
+        flex: 1;
+        accent-color: var(--green);
+      }
+      .slider-val {
+        font-size: 14px;
+        font-weight: 500;
+        min-width: 28px;
+        text-align: right;
+        color: var(--text);
+      }
 
-/* Config section */
-.cfg-row{margin-bottom:.75rem}
-.cfg-lbl{font-size:11px;color:var(--text2);margin-bottom:4px}
-.cfg-inp{
-  width:100%;padding:7px 10px;
-  border:.5px solid var(--bd2);border-radius:var(--r);
-  background:var(--bg2);color:var(--text);
-  font-size:12px;font-family:monospace;outline:none;
-  transition:border-color .15s;
-}
-.cfg-inp:focus{border-color:var(--green)}
-.cfg-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.cfg-note{
-  font-size:11px;color:var(--text3);line-height:1.6;
-  margin-top:.75rem;padding-top:.75rem;
-  border-top:.5px solid var(--bd);
-}
+      /* Config section */
+      .cfg-row {
+        margin-bottom: 0.75rem;
+      }
+      .cfg-lbl {
+        font-size: 11px;
+        color: var(--text2);
+        margin-bottom: 4px;
+      }
+      .cfg-inp {
+        width: 100%;
+        padding: 7px 10px;
+        border: 0.5px solid var(--bd2);
+        border-radius: var(--r);
+        background: var(--bg2);
+        color: var(--text);
+        font-size: 12px;
+        font-family: monospace;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .cfg-inp:focus {
+        border-color: var(--green);
+      }
+      .cfg-2col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .cfg-note {
+        font-size: 11px;
+        color: var(--text3);
+        line-height: 1.6;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 0.5px solid var(--bd);
+      }
 
-/* Start button area */
-.start-row{
-  display:flex;align-items:center;gap:10px;
-  padding-top:.5rem;
-}
-.shortcut-hint{font-size:11px;color:var(--text3)}
+      /* Start button area */
+      .start-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 0.5rem;
+      }
+      .shortcut-hint {
+        font-size: 11px;
+        color: var(--text3);
+      }
 
-/* ══════════════════════════════════════════
+      /* ══════════════════════════════════════════
    SCREEN 2 — REVIEW
 ══════════════════════════════════════════ */
-#screen-review{background:var(--bg)}
+      #screen-review {
+        background: var(--bg);
+      }
 
-.review-topbar{
-  display:flex;align-items:center;gap:12px;
-  padding:.875rem 1.5rem;
-  background:var(--surface);
-  border-bottom:.5px solid var(--bd);
-  flex-shrink:0;
-}
-.progress-wrap{flex:1;display:flex;flex-direction:column;gap:4px}
-.progress-meta{
-  display:flex;align-items:center;justify-content:space-between;
-  font-size:11px;color:var(--text2);
-}
-.progress-bar{
-  height:4px;background:var(--bg2);border-radius:2px;overflow:hidden;
-}
-.progress-fill{
-  height:100%;border-radius:2px;background:var(--green);
-  transition:width .4s ease;
-}
-.card-counter{
-  font-size:12px;font-weight:500;color:var(--text);
-  white-space:nowrap;flex-shrink:0;
-}
+      .review-topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.875rem 1.5rem;
+        background: var(--surface);
+        border-bottom: 0.5px solid var(--bd);
+        flex-shrink: 0;
+      }
+      .progress-wrap {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .progress-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text2);
+      }
+      .progress-bar {
+        height: 4px;
+        background: var(--bg2);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 2px;
+        background: var(--green);
+        transition: width 0.4s ease;
+      }
+      .card-counter {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
 
-/* Review body */
-.review-body{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:2rem 1.5rem;gap:1.5rem;
-  max-width:680px;margin:0 auto;width:100%;
-}
+      /* Review body */
+      .review-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.5rem;
+        gap: 1.5rem;
+        max-width: 680px;
+        margin: 0 auto;
+        width: 100%;
+      }
 
-/* Deck/tag pill */
-.card-meta-row{
-  display:flex;align-items:center;gap:8px;
-  align-self:stretch;
-}
-.card-deck-pill{
-  font-size:11px;padding:3px 10px;border-radius:999px;
-  background:var(--blue-l);color:var(--blue);
-  font-weight:500;border:.5px solid rgba(55,138,221,.25);
-}
-.card-tag-pill{
-  font-size:11px;padding:3px 10px;border-radius:999px;
-  background:var(--bg2);color:var(--text2);
-  border:.5px solid var(--bd);
-}
-.card-num{margin-left:auto;font-size:11px;color:var(--text3)}
+      /* Deck/tag pill */
+      .card-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        align-self: stretch;
+      }
+      .card-deck-pill {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--blue-l);
+        color: var(--blue);
+        font-weight: 500;
+        border: 0.5px solid rgba(55, 138, 221, 0.25);
+      }
+      .card-tag-pill {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--bg2);
+        color: var(--text2);
+        border: 0.5px solid var(--bd);
+      }
+      .card-num {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--text3);
+      }
 
-/* THE CARD */
-.card-scene{
-  width:100%;perspective:1200px;
-  cursor:pointer;flex-shrink:0;
-}
-.card-body{
-  position:relative;
-  transform-style:preserve-3d;
-  transition:transform .5s cubic-bezier(.4,0,.2,1);
-  border-radius:var(--rl);
-}
-.card-body.flipped{transform:rotateX(180deg)}
-.card-face{
-  backface-visibility:hidden;-webkit-backface-visibility:hidden;
-  background:var(--surface);
-  border:.5px solid var(--bd2);
-  border-radius:var(--rl);
-  padding:2.5rem 2rem;
-  min-height:240px;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  text-align:center;
-  position:relative;
-}
-.card-face.back{
-  position:absolute;top:0;left:0;right:0;bottom:0;
-  transform:rotateX(180deg);
-  background:var(--bg2);
-}
-.card-front-label{
-  position:absolute;top:14px;left:18px;
-  font-size:10px;font-weight:500;color:var(--text3);
-  letter-spacing:.06em;text-transform:uppercase;
-}
-.card-back-label{
-  position:absolute;top:14px;left:18px;
-  font-size:10px;font-weight:500;color:var(--green);
-  letter-spacing:.06em;text-transform:uppercase;
-}
-.card-ef-badge{
-  position:absolute;top:12px;right:16px;
-  font-size:10px;color:var(--text3);
-}
-.card-q{
-  font-family:var(--card-font);
-  font-size:26px;font-weight:500;
-  line-height:1.35;letter-spacing:-.01em;
-  color:var(--text);
-}
-.card-a{
-  font-family:var(--card-font);
-  font-size:20px;font-weight:400;
-  line-height:1.55;
-  color:var(--text);
-  max-width:520px;
-}
-.card-a-sub{
-  font-size:13px;color:var(--text2);
-  margin-top:.75rem;line-height:1.65;
-  max-width:480px;
-}
-.card-hint{
-  position:absolute;bottom:14px;
-  font-size:11px;color:var(--text3);
-  display:flex;align-items:center;gap:4px;
-}
-.kbd{
-  display:inline-flex;align-items:center;justify-content:center;
-  background:var(--bg2);border:.5px solid var(--bd2);
-  border-radius:4px;padding:1px 5px;
-  font-size:10px;color:var(--text2);font-family:monospace;
-}
+      /* THE CARD */
+      .card-scene {
+        width: 100%;
+        perspective: 1200px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .card-body {
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: var(--rl);
+      }
+      .card-body.flipped {
+        transform: rotateX(180deg);
+      }
+      .card-face {
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        background: var(--surface);
+        border: 0.5px solid var(--bd2);
+        border-radius: var(--rl);
+        padding: 2.5rem 2rem;
+        min-height: 240px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+      }
+      .card-face.back {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transform: rotateX(180deg);
+        background: var(--bg2);
+      }
+      .card-front-label {
+        position: absolute;
+        top: 14px;
+        left: 18px;
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--text3);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .card-back-label {
+        position: absolute;
+        top: 14px;
+        left: 18px;
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--green);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .card-ef-badge {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        font-size: 10px;
+        color: var(--text3);
+      }
+      .card-q {
+        font-family: var(--card-font);
+        font-size: 26px;
+        font-weight: 500;
+        line-height: 1.35;
+        letter-spacing: -0.01em;
+        color: var(--text);
+      }
+      .card-a {
+        font-family: var(--card-font);
+        font-size: 20px;
+        font-weight: 400;
+        line-height: 1.55;
+        color: var(--text);
+        max-width: 520px;
+      }
+      .card-a-sub {
+        font-size: 13px;
+        color: var(--text2);
+        margin-top: 0.75rem;
+        line-height: 1.65;
+        max-width: 480px;
+      }
+      .card-hint {
+        position: absolute;
+        bottom: 14px;
+        font-size: 11px;
+        color: var(--text3);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .kbd {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg2);
+        border: 0.5px solid var(--bd2);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 10px;
+        color: var(--text2);
+        font-family: monospace;
+      }
 
-/* Flip prompt */
-.flip-prompt{
-  font-size:12px;color:var(--text3);
-  display:flex;align-items:center;gap:6px;
-  transition:opacity .2s;
-}
-.flip-prompt.hidden{opacity:0;pointer-events:none}
+      /* Flip prompt */
+      .flip-prompt {
+        font-size: 12px;
+        color: var(--text3);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: opacity 0.2s;
+      }
+      .flip-prompt.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
 
-/* Rating panel */
-.rating-panel{
-  width:100%;
-  transition:opacity .25s,transform .25s;
-  opacity:0;pointer-events:none;transform:translateY(8px);
-  align-self:stretch;
-}
-.rating-panel.visible{opacity:1;pointer-events:all;transform:translateY(0)}
-.rating-label{
-  font-size:11px;color:var(--text2);text-align:center;
-  margin-bottom:.75rem;letter-spacing:.03em;
-}
-.rating-row{display:flex;gap:6px}
-.rb{
-  flex:1;border-radius:var(--r);
-  border:1px solid var(--bd);
-  background:var(--bg);
-  cursor:pointer;
-  padding:10px 4px 8px;
-  text-align:center;
-  transition:all .15s;
-  font-family:var(--ui-font);
-}
-.rb:hover{transform:translateY(-2px);border-color:var(--bd2)}
-.rb:active{transform:translateY(0)}
-.rb-num{font-size:20px;font-weight:500;line-height:1;font-family:var(--card-font)}
-.rb-lbl{font-size:9px;color:var(--text2);margin-top:4px;line-height:1.3}
-.rb.q0,.rb.q1{border-color:#E24B4A;background:#FCEBEB}
-.rb.q0 .rb-num,.rb.q1 .rb-num{color:#A32D2D}
-.rb.q2{border-color:#ef9f27;background:#faeeda}
-.rb.q2 .rb-num{color:#633806}
-.rb.q3{border-color:#9fe1cb;background:#e1f5ee}
-.rb.q3 .rb-num{color:#085041}
-.rb.q4,.rb.q5{border-color:#1D9E75;background:#e1f5ee}
-.rb.q4 .rb-num,.rb.q5 .rb-num{color:#04342C}
-.rb.pressed{transform:scale(.97);opacity:.8}
+      /* Rating panel */
+      .rating-panel {
+        width: 100%;
+        transition: opacity 0.25s, transform 0.25s;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
+        align-self: stretch;
+      }
+      .rating-panel.visible {
+        opacity: 1;
+        pointer-events: all;
+        transform: translateY(0);
+      }
+      .rating-label {
+        font-size: 11px;
+        color: var(--text2);
+        text-align: center;
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.03em;
+      }
+      .rating-row {
+        display: flex;
+        gap: 6px;
+      }
+      .rb {
+        flex: 1;
+        border-radius: var(--r);
+        border: 1px solid var(--bd);
+        background: var(--bg);
+        cursor: pointer;
+        padding: 10px 4px 8px;
+        text-align: center;
+        transition: all 0.15s;
+        font-family: var(--ui-font);
+      }
+      .rb:hover {
+        transform: translateY(-2px);
+        border-color: var(--bd2);
+      }
+      .rb:active {
+        transform: translateY(0);
+      }
+      .rb-num {
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 1;
+        font-family: var(--card-font);
+      }
+      .rb-lbl {
+        font-size: 9px;
+        color: var(--text2);
+        margin-top: 4px;
+        line-height: 1.3;
+      }
+      .rb.q0,
+      .rb.q1 {
+        border-color: #e24b4a;
+        background: #fcebeb;
+      }
+      .rb.q0 .rb-num,
+      .rb.q1 .rb-num {
+        color: #a32d2d;
+      }
+      .rb.q2 {
+        border-color: #ef9f27;
+        background: #faeeda;
+      }
+      .rb.q2 .rb-num {
+        color: #633806;
+      }
+      .rb.q3 {
+        border-color: #9fe1cb;
+        background: #e1f5ee;
+      }
+      .rb.q3 .rb-num {
+        color: #085041;
+      }
+      .rb.q4,
+      .rb.q5 {
+        border-color: #1d9e75;
+        background: #e1f5ee;
+      }
+      .rb.q4 .rb-num,
+      .rb.q5 .rb-num {
+        color: #04342c;
+      }
+      .rb.pressed {
+        transform: scale(0.97);
+        opacity: 0.8;
+      }
 
-/* Keyboard hint row */
-.kb-row{
-  display:flex;justify-content:center;gap:20px;
-  font-size:11px;color:var(--text3);margin-top:.5rem;
-}
-.kb-item{display:flex;align-items:center;gap:4px}
+      /* Keyboard hint row */
+      .kb-row {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        font-size: 11px;
+        color: var(--text3);
+        margin-top: 0.5rem;
+      }
+      .kb-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
 
-/* ══════════════════════════════════════════
+      /* ══════════════════════════════════════════
    SCREEN 3 — COMPLETE
 ══════════════════════════════════════════ */
-#screen-done .page{
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  min-height:calc(100vh - 57px);
-  gap:2rem;text-align:center;
-}
-.done-icon{
-  width:64px;height:64px;border-radius:50%;
-  background:var(--green-l);
-  display:flex;align-items:center;justify-content:center;
-  border:.5px solid rgba(29,158,117,.3);
-}
-.done-icon svg{width:28px;height:28px;stroke:var(--green);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.done-title{
-  font-family:var(--card-font);
-  font-size:34px;font-weight:600;
-  letter-spacing:-.03em;line-height:1.2;
-}
-.done-sub{font-size:13px;color:var(--text2);line-height:1.7;max-width:400px}
-.done-stats{
-  display:grid;grid-template-columns:repeat(4,1fr);
-  gap:8px;width:100%;max-width:560px;
-}
-.done-stat{
-  background:var(--surface);border:.5px solid var(--bd);
-  border-radius:var(--r);padding:1rem;text-align:center;
-}
-.done-stat-val{
-  font-size:28px;font-weight:500;font-family:var(--card-font);
-  line-height:1;letter-spacing:-.02em;
-}
-.done-stat-lbl{font-size:11px;color:var(--text2);margin-top:4px}
+      #screen-done .page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 57px);
+        gap: 2rem;
+        text-align: center;
+      }
+      .done-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--green-l);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 0.5px solid rgba(29, 158, 117, 0.3);
+      }
+      .done-icon svg {
+        width: 28px;
+        height: 28px;
+        stroke: var(--green);
+        stroke-width: 2;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .done-title {
+        font-family: var(--card-font);
+        font-size: 34px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+      }
+      .done-sub {
+        font-size: 13px;
+        color: var(--text2);
+        line-height: 1.7;
+        max-width: 400px;
+      }
+      .done-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        width: 100%;
+        max-width: 560px;
+      }
+      .done-stat {
+        background: var(--surface);
+        border: 0.5px solid var(--bd);
+        border-radius: var(--r);
+        padding: 1rem;
+        text-align: center;
+      }
+      .done-stat-val {
+        font-size: 28px;
+        font-weight: 500;
+        font-family: var(--card-font);
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      .done-stat-lbl {
+        font-size: 11px;
+        color: var(--text2);
+        margin-top: 4px;
+      }
 
-/* Breakdown bar */
-.breakdown{
-  width:100%;max-width:480px;
-  background:var(--surface);border:.5px solid var(--bd);
-  border-radius:var(--rl);padding:1.25rem;
-  text-align:left;
-}
-.breakdown-title{
-  font-size:11px;font-weight:500;color:var(--text3);
-  letter-spacing:.08em;text-transform:uppercase;
-  margin-bottom:1rem;
-}
-.breakdown-bar-wrap{
-  display:flex;height:8px;border-radius:4px;overflow:hidden;
-  margin-bottom:12px;gap:2px;
-}
-.bbar{height:100%;border-radius:2px;transition:width .6s ease}
-.breakdown-legend{display:flex;gap:16px;flex-wrap:wrap}
-.bl-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
-.bl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+      /* Breakdown bar */
+      .breakdown {
+        width: 100%;
+        max-width: 480px;
+        background: var(--surface);
+        border: 0.5px solid var(--bd);
+        border-radius: var(--rl);
+        padding: 1.25rem;
+        text-align: left;
+      }
+      .breakdown-title {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+      }
+      .breakdown-bar-wrap {
+        display: flex;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        gap: 2px;
+      }
+      .bbar {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.6s ease;
+      }
+      .breakdown-legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .bl-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text2);
+      }
+      .bl-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
 
-/* Action row */
-.done-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+      /* Action row */
+      .done-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
 
-/* ══════════════════════════════════════════
+      /* ══════════════════════════════════════════
    CONFIG PANEL (overlay)
 ══════════════════════════════════════════ */
-.overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.35);
-  z-index:100;display:none;align-items:center;justify-content:center;
-  padding:1rem;
-}
-.overlay.show{display:flex}
-.cfg-panel{
-  background:var(--surface);border:.5px solid var(--bd2);
-  border-radius:var(--rl);padding:1.5rem;
-  width:100%;max-width:460px;
-  max-height:90vh;overflow-y:auto;
-}
-.cfg-panel-title{
-  font-size:15px;font-weight:500;margin-bottom:1.25rem;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.cfg-actions{display:flex;gap:8px;margin-top:1.25rem}
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .overlay.show {
+        display: flex;
+      }
+      .cfg-panel {
+        background: var(--surface);
+        border: 0.5px solid var(--bd2);
+        border-radius: var(--rl);
+        padding: 1.5rem;
+        width: 100%;
+        max-width: 460px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .cfg-panel-title {
+        font-size: 15px;
+        font-weight: 500;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .cfg-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 1.25rem;
+      }
 
-/* ── TOAST ── */
-.toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);
-  background:var(--text);color:var(--bg);
-  padding:8px 18px;border-radius:999px;
-  font-size:12px;opacity:0;transition:all .25s;z-index:200;
-  white-space:nowrap;pointer-events:none;
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+      /* ── TOAST ── */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(16px);
+        background: var(--text);
+        color: var(--bg);
+        padding: 8px 18px;
+        border-radius: 999px;
+        font-size: 12px;
+        opacity: 0;
+        transition: all 0.25s;
+        z-index: 200;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
 
-/* ── LOADING SKELETON ── */
-.skeleton{
-  background:var(--bg2);border-radius:4px;
-  animation:shimmer 1.4s ease-in-out infinite;
-}
-@keyframes shimmer{0%,100%{opacity:.6}50%{opacity:1}}
-</style>
-</head>
-<body>
-
-<!-- ── SCREEN 1: SETUP ── -->
-<div class="screen active" id="screen-setup">
-  <div class="topbar">
-    <div class="logo">
-      <div class="logo-dot"></div>
-      SRS Review
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)">
-        <div class="sdot" id="sdot"></div>
-        <span id="stext">Chưa kết nối</span>
-      </div>
-      <button class="btn-icon" onclick="openCfg()" title="Cài đặt kết nối Notion">
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-          <circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <div class="page">
-    <div class="setup-hero">
-      <h1>Review session</h1>
-      <p>Chọn bộ thẻ và bắt đầu ôn tập theo lịch Spaced Repetition.</p>
-    </div>
-
-    <div class="stats-strip" id="stats-strip">
-      <div class="stat-box">
-        <div class="stat-val" id="st-due" style="color:var(--green)">—</div>
-        <div class="stat-lbl">Đến hạn hôm nay</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="st-new">—</div>
-        <div class="stat-lbl">Thẻ mới</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="st-total">—</div>
-        <div class="stat-lbl">Tổng thẻ</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" id="st-mastered" style="color:var(--blue)">—</div>
-        <div class="stat-lbl">Đã thành thạo</div>
-      </div>
-    </div>
-
-    <div class="setup-card">
-      <div class="setup-card-title">Chọn bộ thẻ</div>
-      <div class="deck-grid" id="deck-grid">
-        <div class="deck-btn sel" data-deck="all" onclick="selectDeck(this)">
-          <div class="deck-name">Tất cả</div>
-          <div class="deck-count" id="cnt-all">— thẻ đến hạn</div>
+      /* ── LOADING SKELETON ── */
+      .skeleton {
+        background: var(--bg2);
+        border-radius: 4px;
+        animation: shimmer 1.4s ease-in-out infinite;
+      }
+      @keyframes shimmer {
+        0%,
+        100% {
+          opacity: 0.6;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── SCREEN 1: SETUP ── -->
+    <div class="screen active" id="screen-setup">
+      <div class="topbar">
+        <div class="logo">
+          <div class="logo-dot"></div>
+          SRS Review
         </div>
-        <div class="deck-btn" data-deck="BA-SQL" onclick="selectDeck(this)">
-          <div class="deck-name">BA · SQL</div>
-          <div class="deck-count" id="cnt-BA-SQL">— thẻ</div>
-        </div>
-        <div class="deck-btn" data-deck="IELTS" onclick="selectDeck(this)">
-          <div class="deck-name">IELTS</div>
-          <div class="deck-count" id="cnt-IELTS">— thẻ</div>
-        </div>
-        <div class="deck-btn" data-deck="Fintech" onclick="selectDeck(this)">
-          <div class="deck-name">Fintech</div>
-          <div class="deck-count" id="cnt-Fintech">— thẻ</div>
-        </div>
-        <div class="deck-btn" data-deck="Self-study" onclick="selectDeck(this)">
-          <div class="deck-name">Self-study</div>
-          <div class="deck-count" id="cnt-Self-study">— thẻ</div>
-        </div>
-        <div class="deck-btn" data-deck="Agile" onclick="selectDeck(this)">
-          <div class="deck-name">Agile</div>
-          <div class="deck-count" id="cnt-Agile">— thẻ</div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              font-size: 12px;
+              color: var(--text2);
+            "
+          >
+            <div class="sdot" id="sdot"></div>
+            <span id="stext">Chưa kết nối</span>
+          </div>
+          <button
+            class="btn-icon"
+            onclick="openCfg()"
+            title="Cài đặt kết nối Notion"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            >
+              <circle cx="8" cy="8" r="2.5" />
+              <path
+                d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"
+              />
+            </svg>
+          </button>
         </div>
       </div>
-      <div class="slider-row">
-        <label>Số thẻ mỗi session</label>
-        <input type="range" min="5" max="50" step="5" value="20" id="limit-slider"
-          oninput="document.getElementById('limit-val').textContent=this.value">
-        <div class="slider-val" id="limit-val">20</div>
-      </div>
-    </div>
 
-    <div class="start-row">
-      <button class="btn btn-primary" onclick="startSession()" id="start-btn">
-        Bắt đầu ôn tập
-      </button>
-      <button class="btn btn-sm" onclick="runDemo()">Demo</button>
-      <span class="shortcut-hint">hoặc nhấn <span class="kbd">Enter</span></span>
-    </div>
-  </div>
-</div>
+      <div class="page">
+        <div class="setup-hero">
+          <h1>Review session</h1>
+          <p>Chọn bộ thẻ và bắt đầu ôn tập theo lịch Spaced Repetition.</p>
+        </div>
 
-<!-- ── SCREEN 2: REVIEW ── -->
-<div class="screen" id="screen-review">
-  <div class="review-topbar">
-    <button class="btn-icon" onclick="exitSession()" title="Thoát">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-        <path d="M8.5 1L2 7l6.5 6M2 7h10"/>
-      </svg>
-    </button>
-    <div class="progress-wrap">
-      <div class="progress-meta">
-        <span id="deck-label">—</span>
-        <span id="session-stats-mini">0 đúng · 0 sai</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-      </div>
-    </div>
-    <div class="card-counter" id="card-counter">0 / 0</div>
-  </div>
-
-  <div class="review-body">
-    <div class="card-meta-row">
-      <div class="card-deck-pill" id="r-deck">—</div>
-      <div class="card-tag-pill" id="r-tags">—</div>
-      <div class="card-num" id="r-status-badge">New</div>
-    </div>
-
-    <!-- The card itself -->
-    <div class="card-scene" onclick="flipCard()" id="card-scene">
-      <div class="card-body" id="card-body">
-        <!-- Front -->
-        <div class="card-face front">
-          <div class="card-front-label">Câu hỏi</div>
-          <div class="card-ef-badge" id="r-ef">EF —</div>
-          <div class="card-q" id="card-front-text">Loading…</div>
-          <div class="card-hint">
-            <span class="kbd">Space</span> hoặc click để lật
+        <div class="stats-strip" id="stats-strip">
+          <div class="stat-box">
+            <div class="stat-val" id="st-due" style="color: var(--green)">
+              —
+            </div>
+            <div class="stat-lbl">Đến hạn hôm nay</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="st-new">—</div>
+            <div class="stat-lbl">Thẻ mới</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="st-total">—</div>
+            <div class="stat-lbl">Tổng thẻ</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="st-mastered" style="color: var(--blue)">
+              —
+            </div>
+            <div class="stat-lbl">Đã thành thạo</div>
           </div>
         </div>
-        <!-- Back -->
-        <div class="card-face back">
-          <div class="card-back-label">Đáp án</div>
-          <div class="card-a" id="card-back-text">—</div>
-          <div class="card-a-sub" id="card-back-sub"></div>
+
+        <div class="setup-card">
+          <div class="setup-card-title">Chọn bộ thẻ</div>
+          <div class="deck-grid" id="deck-grid">
+            <div
+              class="deck-btn sel"
+              data-deck="all"
+              onclick="selectDeck(this)"
+            >
+              <div class="deck-name">Tất cả</div>
+              <div class="deck-count" id="cnt-all">— thẻ đến hạn</div>
+            </div>
+            <div class="deck-btn" data-deck="BA-SQL" onclick="selectDeck(this)">
+              <div class="deck-name">BA · SQL</div>
+              <div class="deck-count" id="cnt-BA-SQL">— thẻ</div>
+            </div>
+            <div class="deck-btn" data-deck="IELTS" onclick="selectDeck(this)">
+              <div class="deck-name">IELTS</div>
+              <div class="deck-count" id="cnt-IELTS">— thẻ</div>
+            </div>
+            <div
+              class="deck-btn"
+              data-deck="Fintech"
+              onclick="selectDeck(this)"
+            >
+              <div class="deck-name">Fintech</div>
+              <div class="deck-count" id="cnt-Fintech">— thẻ</div>
+            </div>
+            <div
+              class="deck-btn"
+              data-deck="Self-study"
+              onclick="selectDeck(this)"
+            >
+              <div class="deck-name">Self-study</div>
+              <div class="deck-count" id="cnt-Self-study">— thẻ</div>
+            </div>
+            <div class="deck-btn" data-deck="Agile" onclick="selectDeck(this)">
+              <div class="deck-name">Agile</div>
+              <div class="deck-count" id="cnt-Agile">— thẻ</div>
+            </div>
+          </div>
+          <div class="slider-row">
+            <label>Số thẻ mỗi session</label>
+            <input
+              type="range"
+              min="5"
+              max="50"
+              step="5"
+              value="20"
+              id="limit-slider"
+              oninput="document.getElementById('limit-val').textContent=this.value"
+            />
+            <div class="slider-val" id="limit-val">20</div>
+          </div>
+        </div>
+
+        <div class="start-row">
+          <button
+            class="btn btn-primary"
+            onclick="startSession()"
+            id="start-btn"
+          >
+            Bắt đầu ôn tập
+          </button>
+          <button class="btn btn-sm" onclick="runDemo()">Demo</button>
+          <span class="shortcut-hint"
+            >hoặc nhấn <span class="kbd">Enter</span></span
+          >
         </div>
       </div>
     </div>
 
-    <div class="flip-prompt" id="flip-prompt">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M2 5l5 5 5-5"/>
-      </svg>
-      Nhấn để xem đáp án
-    </div>
-
-    <!-- Rating panel -->
-    <div class="rating-panel" id="rating-panel">
-      <div class="rating-label">Bạn nhớ tốt đến mức nào?</div>
-      <div class="rating-row">
-        <div class="rb q0" onclick="rateCard(0)">
-          <div class="rb-num">0</div>
-          <div class="rb-lbl">Quên hoàn toàn</div>
+    <!-- ── SCREEN 2: REVIEW ── -->
+    <div class="screen" id="screen-review">
+      <div class="review-topbar">
+        <button class="btn-icon" onclick="exitSession()" title="Thoát">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          >
+            <path d="M8.5 1L2 7l6.5 6M2 7h10" />
+          </svg>
+        </button>
+        <div class="progress-wrap">
+          <div class="progress-meta">
+            <span id="deck-label">—</span>
+            <span id="session-stats-mini">0 đúng · 0 sai</span>
+          </div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              id="progress-fill"
+              style="width: 0%"
+            ></div>
+          </div>
         </div>
-        <div class="rb q1" onclick="rateCard(1)">
-          <div class="rb-num">1</div>
-          <div class="rb-lbl">Nhớ mơ hồ</div>
+        <div class="card-counter" id="card-counter">0 / 0</div>
+      </div>
+
+      <div class="review-body">
+        <div class="card-meta-row">
+          <div class="card-deck-pill" id="r-deck">—</div>
+          <div class="card-tag-pill" id="r-tags">—</div>
+          <div class="card-num" id="r-status-badge">New</div>
         </div>
-        <div class="rb q2" onclick="rateCard(2)">
-          <div class="rb-num">2</div>
-          <div class="rb-lbl">Khó khăn</div>
+
+        <!-- The card itself -->
+        <div class="card-scene" onclick="flipCard()" id="card-scene">
+          <div class="card-body" id="card-body">
+            <!-- Front -->
+            <div class="card-face front">
+              <div class="card-front-label">Câu hỏi</div>
+              <div class="card-ef-badge" id="r-ef">EF —</div>
+              <div class="card-q" id="card-front-text">Loading…</div>
+              <div class="card-hint">
+                <span class="kbd">Space</span> hoặc click để lật
+              </div>
+            </div>
+            <!-- Back -->
+            <div class="card-face back">
+              <div class="card-back-label">Đáp án</div>
+              <div class="card-a" id="card-back-text">—</div>
+              <div class="card-a-sub" id="card-back-sub"></div>
+            </div>
+          </div>
         </div>
-        <div class="rb q3" onclick="rateCard(3)">
-          <div class="rb-num">3</div>
-          <div class="rb-lbl">Nhớ được</div>
+
+        <div class="flip-prompt" id="flip-prompt">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M2 5l5 5 5-5" />
+          </svg>
+          Nhấn để xem đáp án
         </div>
-        <div class="rb q4" onclick="rateCard(4)">
-          <div class="rb-num">4</div>
-          <div class="rb-lbl">Dễ dàng</div>
+
+        <!-- Rating panel -->
+        <div class="rating-panel" id="rating-panel">
+          <div class="rating-label">Bạn nhớ tốt đến mức nào?</div>
+          <div class="rating-row">
+            <div class="rb q0" onclick="rateCard(0)">
+              <div class="rb-num">0</div>
+              <div class="rb-lbl">Quên hoàn toàn</div>
+            </div>
+            <div class="rb q1" onclick="rateCard(1)">
+              <div class="rb-num">1</div>
+              <div class="rb-lbl">Nhớ mơ hồ</div>
+            </div>
+            <div class="rb q2" onclick="rateCard(2)">
+              <div class="rb-num">2</div>
+              <div class="rb-lbl">Khó khăn</div>
+            </div>
+            <div class="rb q3" onclick="rateCard(3)">
+              <div class="rb-num">3</div>
+              <div class="rb-lbl">Nhớ được</div>
+            </div>
+            <div class="rb q4" onclick="rateCard(4)">
+              <div class="rb-num">4</div>
+              <div class="rb-lbl">Dễ dàng</div>
+            </div>
+            <div class="rb q5" onclick="rateCard(5)">
+              <div class="rb-num">5</div>
+              <div class="rb-lbl">Rất dễ</div>
+            </div>
+          </div>
+          <div class="kb-row">
+            <div class="kb-item"><span class="kbd">1–3</span> Chưa nhớ</div>
+            <div class="kb-item"><span class="kbd">4</span> Nhớ được</div>
+            <div class="kb-item"><span class="kbd">5</span> Dễ dàng</div>
+            <div class="kb-item"><span class="kbd">6</span> Rất dễ</div>
+          </div>
         </div>
-        <div class="rb q5" onclick="rateCard(5)">
-          <div class="rb-num">5</div>
-          <div class="rb-lbl">Rất dễ</div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN 3: DONE ── -->
+    <div class="screen" id="screen-done">
+      <div class="topbar">
+        <div class="logo">
+          <div class="logo-dot"></div>
+          SRS Review
         </div>
       </div>
-      <div class="kb-row">
-        <div class="kb-item"><span class="kbd">1–3</span> Chưa nhớ</div>
-        <div class="kb-item"><span class="kbd">4</span> Nhớ được</div>
-        <div class="kb-item"><span class="kbd">5</span> Dễ dàng</div>
-        <div class="kb-item"><span class="kbd">6</span> Rất dễ</div>
-      </div>
-    </div>
-  </div>
-</div>
+      <div class="page">
+        <div class="done-icon">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+        </div>
+        <div>
+          <div class="done-title" id="done-title">Session hoàn thành!</div>
+          <div class="done-sub" id="done-sub">
+            Bạn đã ôn xong hôm nay. Não bộ đang consolidate ký ức.
+          </div>
+        </div>
+        <div class="done-stats" id="done-stats">
+          <div class="done-stat">
+            <div
+              class="done-stat-val"
+              id="ds-total"
+              style="color: var(--green)"
+            >
+              0
+            </div>
+            <div class="done-stat-lbl">Tổng thẻ</div>
+          </div>
+          <div class="done-stat">
+            <div class="done-stat-val" id="ds-pass" style="color: var(--green)">
+              0
+            </div>
+            <div class="done-stat-lbl">Trả lời đúng</div>
+          </div>
+          <div class="done-stat">
+            <div class="done-stat-val" id="ds-fail" style="color: var(--red)">
+              0
+            </div>
+            <div class="done-stat-lbl">Cần ôn lại</div>
+          </div>
+          <div class="done-stat">
+            <div class="done-stat-val" id="ds-rate" style="color: var(--blue)">
+              0%
+            </div>
+            <div class="done-stat-lbl">Retention</div>
+          </div>
+        </div>
 
-<!-- ── SCREEN 3: DONE ── -->
-<div class="screen" id="screen-done">
-  <div class="topbar">
-    <div class="logo"><div class="logo-dot"></div>SRS Review</div>
-  </div>
-  <div class="page">
-    <div class="done-icon">
-      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-    </div>
-    <div>
-      <div class="done-title" id="done-title">Session hoàn thành!</div>
-      <div class="done-sub" id="done-sub">Bạn đã ôn xong hôm nay. Não bộ đang consolidate ký ức.</div>
-    </div>
-    <div class="done-stats" id="done-stats">
-      <div class="done-stat">
-        <div class="done-stat-val" id="ds-total" style="color:var(--green)">0</div>
-        <div class="done-stat-lbl">Tổng thẻ</div>
-      </div>
-      <div class="done-stat">
-        <div class="done-stat-val" id="ds-pass" style="color:var(--green)">0</div>
-        <div class="done-stat-lbl">Trả lời đúng</div>
-      </div>
-      <div class="done-stat">
-        <div class="done-stat-val" id="ds-fail" style="color:var(--red)">0</div>
-        <div class="done-stat-lbl">Cần ôn lại</div>
-      </div>
-      <div class="done-stat">
-        <div class="done-stat-val" id="ds-rate" style="color:var(--blue)">0%</div>
-        <div class="done-stat-lbl">Retention</div>
-      </div>
-    </div>
+        <div class="breakdown" id="breakdown-card">
+          <div class="breakdown-title">Phân bổ điểm số</div>
+          <div class="breakdown-bar-wrap" id="bbar-wrap"></div>
+          <div class="breakdown-legend" id="bbar-legend"></div>
+        </div>
 
-    <div class="breakdown" id="breakdown-card">
-      <div class="breakdown-title">Phân bổ điểm số</div>
-      <div class="breakdown-bar-wrap" id="bbar-wrap"></div>
-      <div class="breakdown-legend" id="bbar-legend"></div>
-    </div>
-
-    <div class="done-actions">
-      <button class="btn btn-primary" onclick="goSetup()">Ôn thêm session khác</button>
-      <button class="btn" onclick="showLog()">Xem lịch sử review</button>
-    </div>
-    <div style="font-size:11px;color:var(--text3);margin-top:.5rem" id="sync-status-done"></div>
-  </div>
-</div>
-
-<!-- ── CONFIG OVERLAY ── -->
-<div class="overlay" id="cfg-overlay" onclick="closeCfgOutside(event)">
-  <div class="cfg-panel">
-    <div class="cfg-panel-title">
-      Kết nối Notion
-      <button class="btn-icon btn-sm" onclick="closeCfg()">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 1l11 11M12 1L1 12"/></svg>
-      </button>
-    </div>
-
-    <div class="cfg-row">
-      <div class="cfg-lbl">Notion Integration Token</div>
-      <input class="cfg-inp" type="password" id="c-token" placeholder="secret_xxxxxxxxxxxx"/>
-    </div>
-    <div class="cfg-2col">
-      <div class="cfg-row">
-        <div class="cfg-lbl">Flashcard DB ID</div>
-        <input class="cfg-inp" id="c-card-db" placeholder="32 ký tự từ URL"/>
-      </div>
-      <div class="cfg-row">
-        <div class="cfg-lbl">Review Log DB ID</div>
-        <input class="cfg-inp" id="c-log-db" placeholder="32 ký tự từ URL"/>
+        <div class="done-actions">
+          <button class="btn btn-primary" onclick="goSetup()">
+            Ôn thêm session khác
+          </button>
+          <button class="btn" onclick="showLog()">Xem lịch sử review</button>
+        </div>
+        <div
+          style="font-size: 11px; color: var(--text3); margin-top: 0.5rem"
+          id="sync-status-done"
+        ></div>
       </div>
     </div>
 
-    <div style="margin-top:.5rem">
-      <div class="cfg-lbl" style="margin-bottom:8px;font-size:11px;font-weight:500;color:var(--text2)">Tên property trong Notion</div>
-      <div class="cfg-2col">
+    <!-- ── CONFIG OVERLAY ── -->
+    <div class="overlay" id="cfg-overlay" onclick="closeCfgOutside(event)">
+      <div class="cfg-panel">
+        <div class="cfg-panel-title">
+          Kết nối Notion
+          <button class="btn-icon btn-sm" onclick="closeCfg()">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 13 13"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            >
+              <path d="M1 1l11 11M12 1L1 12" />
+            </svg>
+          </button>
+        </div>
+
         <div class="cfg-row">
-          <div class="cfg-lbl">Front (mặt trước)</div>
-          <input class="cfg-inp" id="c-front" value="Front" placeholder="Front"/>
+          <div class="cfg-lbl">Notion Integration Token</div>
+          <input
+            class="cfg-inp"
+            type="password"
+            id="c-token"
+            placeholder="secret_xxxxxxxxxxxx"
+          />
         </div>
-        <div class="cfg-row">
-          <div class="cfg-lbl">Back (mặt sau)</div>
-          <input class="cfg-inp" id="c-back" value="Back" placeholder="Back"/>
+        <div class="cfg-2col">
+          <div class="cfg-row">
+            <div class="cfg-lbl">Flashcard DB ID</div>
+            <input
+              class="cfg-inp"
+              id="c-card-db"
+              placeholder="32 ký tự từ URL"
+            />
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-lbl">Review Log DB ID</div>
+            <input
+              class="cfg-inp"
+              id="c-log-db"
+              placeholder="32 ký tự từ URL"
+            />
+          </div>
         </div>
-        <div class="cfg-row">
-          <div class="cfg-lbl">Deck</div>
-          <input class="cfg-inp" id="c-deck" value="Deck" placeholder="Deck"/>
+
+        <div style="margin-top: 0.5rem">
+          <div
+            class="cfg-lbl"
+            style="
+              margin-bottom: 8px;
+              font-size: 11px;
+              font-weight: 500;
+              color: var(--text2);
+            "
+          >
+            Tên property trong Notion
+          </div>
+          <div class="cfg-2col">
+            <div class="cfg-row">
+              <div class="cfg-lbl">Front (mặt trước)</div>
+              <input
+                class="cfg-inp"
+                id="c-front"
+                value="Front"
+                placeholder="Front"
+              />
+            </div>
+            <div class="cfg-row">
+              <div class="cfg-lbl">Back (mặt sau)</div>
+              <input
+                class="cfg-inp"
+                id="c-back"
+                value="Back"
+                placeholder="Back"
+              />
+            </div>
+            <div class="cfg-row">
+              <div class="cfg-lbl">Deck</div>
+              <input
+                class="cfg-inp"
+                id="c-deck"
+                value="Deck"
+                placeholder="Deck"
+              />
+            </div>
+            <div class="cfg-row">
+              <div class="cfg-lbl">Next Review</div>
+              <input
+                class="cfg-inp"
+                id="c-next"
+                value="Next Review"
+                placeholder="Next Review"
+              />
+            </div>
+            <div class="cfg-row">
+              <div class="cfg-lbl">EF</div>
+              <input class="cfg-inp" id="c-ef" value="EF" placeholder="EF" />
+            </div>
+            <div class="cfg-row">
+              <div class="cfg-lbl">Interval</div>
+              <input
+                class="cfg-inp"
+                id="c-interval"
+                value="Interval"
+                placeholder="Interval"
+              />
+            </div>
+            <div class="cfg-row">
+              <div class="cfg-lbl">Repetitions</div>
+              <input
+                class="cfg-inp"
+                id="c-reps"
+                value="Repetitions"
+                placeholder="Repetitions"
+              />
+            </div>
+            <div class="cfg-row">
+              <div class="cfg-lbl">Status</div>
+              <input
+                class="cfg-inp"
+                id="c-status"
+                value="Status"
+                placeholder="Status"
+              />
+            </div>
+          </div>
         </div>
-        <div class="cfg-row">
-          <div class="cfg-lbl">Next Review</div>
-          <input class="cfg-inp" id="c-next" value="Next Review" placeholder="Next Review"/>
+
+        <div class="cfg-note">
+          Token & DB ID được lưu trong <strong>localStorage</strong> của trình
+          duyệt. Dữ liệu chỉ được gửi trực tiếp đến Notion API — không qua
+          server trung gian. Cần bật <strong>CORS</strong> hoặc dùng proxy
+          endpoint
+          <code
+            style="
+              font-size: 10px;
+              background: var(--bg2);
+              padding: 1px 4px;
+              border-radius: 3px;
+            "
+            >/api/srs</code
+          >
+          trên Vercel.
         </div>
-        <div class="cfg-row">
-          <div class="cfg-lbl">EF</div>
-          <input class="cfg-inp" id="c-ef" value="EF" placeholder="EF"/>
-        </div>
-        <div class="cfg-row">
-          <div class="cfg-lbl">Interval</div>
-          <input class="cfg-inp" id="c-interval" value="Interval" placeholder="Interval"/>
-        </div>
-        <div class="cfg-row">
-          <div class="cfg-lbl">Repetitions</div>
-          <input class="cfg-inp" id="c-reps" value="Repetitions" placeholder="Repetitions"/>
-        </div>
-        <div class="cfg-row">
-          <div class="cfg-lbl">Status</div>
-          <input class="cfg-inp" id="c-status" value="Status" placeholder="Status"/>
+
+        <div class="cfg-actions">
+          <button class="btn btn-primary" style="flex: 1" onclick="saveCfg()">
+            Lưu & kết nối
+          </button>
+          <button class="btn" onclick="closeCfg()">Hủy</button>
         </div>
       </div>
     </div>
 
-    <div class="cfg-note">
-      Token & DB ID được lưu trong <strong>localStorage</strong> của trình duyệt.
-      Dữ liệu chỉ được gửi trực tiếp đến Notion API — không qua server trung gian.
-      Cần bật <strong>CORS</strong> hoặc dùng proxy endpoint <code style="font-size:10px;background:var(--bg2);padding:1px 4px;border-radius:3px">/api/srs</code> trên Vercel.
-    </div>
+    <!-- ── TOAST ── -->
+    <div class="toast" id="toast"></div>
 
-    <div class="cfg-actions">
-      <button class="btn btn-primary" style="flex:1" onclick="saveCfg()">Lưu & kết nối</button>
-      <button class="btn" onclick="closeCfg()">Hủy</button>
-    </div>
-  </div>
-</div>
+    <script>
+      // ═══════════════════════════════════════════════
+      // STATE
+      // ═══════════════════════════════════════════════
+      const S = {
+        cards: [], // all due cards for session
+        queue: [], // remaining this session
+        current: null, // current card object
+        idx: 0, // current index in queue
+        isFlipped: false,
+        results: [], // [{card, rating, pass}]
+        passCount: 0,
+        failCount: 0,
+        selectedDeck: "all",
+        limit: 20,
+        cfg: {},
+        isDemo: false,
+        syncing: false,
+      };
 
-<!-- ── TOAST ── -->
-<div class="toast" id="toast"></div>
-
-<script>
-// ═══════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════
-const S = {
-  cards: [],          // all due cards for session
-  queue: [],          // remaining this session
-  current: null,      // current card object
-  idx: 0,             // current index in queue
-  isFlipped: false,
-  results: [],        // [{card, rating, pass}]
-  passCount: 0,
-  failCount: 0,
-  selectedDeck: 'all',
-  limit: 20,
-  cfg: {},
-  isDemo: false,
-  syncing: false,
-};
-
-const PROP = () => ({
-  front:    S.cfg.front    || 'Front',
-  back:     S.cfg.back     || 'Back',
-  deck:     S.cfg.deck     || 'Deck',
-  next:     S.cfg.next     || 'Next Review',
-  ef:       S.cfg.ef       || 'EF',
-  interval: S.cfg.interval || 'Interval',
-  reps:     S.cfg.reps     || 'Repetitions',
-  status:   S.cfg.status   || 'Status',
-  tags:     'Tags',
-  lastRating: 'Last Rating',
-});
-
-// ═══════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════
-(function init(){
-  loadCfg();
-  document.addEventListener('keydown', onKey);
-  if(S.cfg.token && S.cfg.cardDb){
-    fetchCards();
-  } else {
-    runDemo();
-  }
-})();
-
-// ═══════════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════════
-function loadCfg(){
-  try{
-    const c = JSON.parse(localStorage.getItem('srs_cfg')||'{}');
-    S.cfg = c;
-    if(c.token)    document.getElementById('c-token').value    = c.token;
-    if(c.cardDb)   document.getElementById('c-card-db').value  = c.cardDb;
-    if(c.logDb)    document.getElementById('c-log-db').value   = c.logDb;
-    if(c.front)    document.getElementById('c-front').value    = c.front;
-    if(c.back)     document.getElementById('c-back').value     = c.back;
-    if(c.deck)     document.getElementById('c-deck').value     = c.deck;
-    if(c.next)     document.getElementById('c-next').value     = c.next;
-    if(c.ef)       document.getElementById('c-ef').value       = c.ef;
-    if(c.interval) document.getElementById('c-interval').value = c.interval;
-    if(c.reps)     document.getElementById('c-reps').value     = c.reps;
-    if(c.status)   document.getElementById('c-status').value   = c.status;
-  }catch(e){}
-}
-
-function saveCfg(){
-  const c = {
-    token:    document.getElementById('c-token').value.trim(),
-    cardDb:   document.getElementById('c-card-db').value.trim().replace(/-/g,''),
-    logDb:    document.getElementById('c-log-db').value.trim().replace(/-/g,''),
-    front:    document.getElementById('c-front').value.trim(),
-    back:     document.getElementById('c-back').value.trim(),
-    deck:     document.getElementById('c-deck').value.trim(),
-    next:     document.getElementById('c-next').value.trim(),
-    ef:       document.getElementById('c-ef').value.trim(),
-    interval: document.getElementById('c-interval').value.trim(),
-    reps:     document.getElementById('c-reps').value.trim(),
-    status:   document.getElementById('c-status').value.trim(),
-  };
-  localStorage.setItem('srs_cfg', JSON.stringify(c));
-  S.cfg = c;
-  S.isDemo = false;
-  closeCfg();
-  fetchCards();
-}
-
-function openCfg(){ document.getElementById('cfg-overlay').classList.add('show') }
-function closeCfg(){ document.getElementById('cfg-overlay').classList.remove('show') }
-function closeCfgOutside(e){ if(e.target===document.getElementById('cfg-overlay')) closeCfg() }
-
-// ═══════════════════════════════════════════════
-// NOTION API
-// ═══════════════════════════════════════════════
-async function notionQuery(dbId, filter, sorts){
-  const body = { page_size: 100 };
-  if(filter) body.filter = filter;
-  if(sorts)  body.sorts  = sorts;
-
-  const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${S.cfg.token}`,
-      'Notion-Version': '2022-06-28',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  if(!res.ok) throw new Error(`Notion API ${res.status}`);
-  return res.json();
-}
-
-async function notionPatch(pageId, properties){
-  const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-    method: 'PATCH',
-    headers: {
-      'Authorization': `Bearer ${S.cfg.token}`,
-      'Notion-Version': '2022-06-28',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ properties }),
-  });
-  if(!res.ok) throw new Error(`Notion PATCH ${res.status}`);
-  return res.json();
-}
-
-async function notionCreate(dbId, properties){
-  const res = await fetch('https://api.notion.com/v1/pages', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${S.cfg.token}`,
-      'Notion-Version': '2022-06-28',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ parent: { database_id: dbId }, properties }),
-  });
-  if(!res.ok) throw new Error(`Notion CREATE ${res.status}`);
-  return res.json();
-}
-
-// ═══════════════════════════════════════════════
-// FETCH CARDS
-// ═══════════════════════════════════════════════
-async function fetchCards(){
-  setStatus('loading', 'Đang tải thẻ từ Notion…');
-  try{
-    const today = localDate(new Date());
-    const p = PROP();
-    const data = await notionQuery(S.cfg.cardDb, {
-      or: [
-        { property: p.next, date: { on_or_before: today } },
-        { property: p.next, date: { is_empty: true } },
-      ]
-    });
-    S.cards = parseCards(data.results);
-    setStatus('ok', `Đã tải ${S.cards.length} thẻ đến hạn`);
-    updateSetupStats();
-  }catch(err){
-    setStatus('err', `Lỗi: ${err.message}`);
-    toast('Không kết nối được Notion — chuyển Demo mode');
-    runDemo();
-  }
-}
-
-function parseCards(pages){
-  return pages.map(page => {
-    const pr = page.properties || {};
-    const p  = PROP();
-    return {
-      id:     page.id,
-      front:  getText(pr[p.front]),
-      back:   getText(pr[p.back]),
-      deck:   getSelect(pr[p.deck]) || 'General',
-      tags:   getMultiSelect(pr[p.tags]),
-      ef:     pr[p.ef]?.number ?? 2.5,
-      interval: pr[p.interval]?.number ?? 1,
-      reps:   pr[p.reps]?.number ?? 0,
-      status: getStatus(pr[p.status]),
-      next:   pr[p.next]?.date?.start ?? null,
-    };
-  }).filter(c => c.front);
-}
-
-function getText(prop){
-  if(!prop) return '';
-  if(prop.title)       return prop.title.map(t=>t.plain_text).join('');
-  if(prop.rich_text)   return prop.rich_text.map(t=>t.plain_text).join('');
-  return '';
-}
-function getSelect(prop){  return prop?.select?.name || ''; }
-function getStatus(prop){  return prop?.status?.name || prop?.select?.name || ''; }
-function getMultiSelect(prop){ return prop?.multi_select?.map(s=>s.name) || []; }
-
-// ═══════════════════════════════════════════════
-// DEMO DATA
-// ═══════════════════════════════════════════════
-function runDemo(){
-  S.isDemo = true;
-  S.cards = [
-    { id:'d1', front:'Business Analyst làm gì trong một sprint?', back:'BA làm việc cùng PO để clarify requirements, viết User Stories, tham gia Sprint Planning và Review, đảm bảo team hiểu rõ acceptance criteria.', deck:'BA-SQL', tags:['Agile','BA'], ef:2.5, interval:1, reps:0, status:'New' },
-    { id:'d2', front:'BRD là gì? Khác gì FRD?', back:'BRD (Business Requirements Document) mô tả nhu cầu business cấp cao. FRD (Functional Requirements Document) mô tả chi tiết tính năng hệ thống cần có.', deck:'BA-SQL', tags:['BRD'], ef:2.1, interval:3, reps:2, status:'Learning' },
-    { id:'d3', front:'SQL: Sự khác biệt giữa INNER JOIN và LEFT JOIN?', back:'INNER JOIN: chỉ trả về rows có match ở cả 2 bảng.\nLEFT JOIN: trả về tất cả rows từ bảng trái, NULL nếu không match ở bảng phải.', deck:'BA-SQL', tags:['SQL'], ef:2.8, interval:7, reps:4, status:'Review' },
-    { id:'d4', front:'Từ "Ubiquitous" nghĩa là gì?', back:'(adj) Hiện diện ở mọi nơi, phổ biến rộng rãi.\n\n"Smartphones have become ubiquitous in modern society."', deck:'IELTS', tags:['Vocabulary','C1'], ef:1.8, interval:1, reps:1, status:'Learning' },
-    { id:'d5', front:'IELTS Writing Task 2: Cấu trúc một body paragraph?', back:'1. Topic sentence — nêu luận điểm chính\n2. Explanation — giải thích tại sao\n3. Example — ví dụ cụ thể\n4. Link — kết nối lại với đề bài', deck:'IELTS', tags:['Writing'], ef:2.3, interval:4, reps:3, status:'Review' },
-    { id:'d6', front:'MoMo là ví điện tử hay ngân hàng số?', back:'MoMo là ví điện tử (e-wallet), không phải ngân hàng. Hoạt động theo mô hình PSP (Payment Service Provider), không nhận tiền gửi như ngân hàng truyền thống.', deck:'Fintech', tags:['Fintech','Vietnam'], ef:2.5, interval:1, reps:0, status:'New' },
-    { id:'d7', front:'Agile Manifesto: 4 giá trị cốt lõi?', back:'1. Individuals & interactions over processes & tools\n2. Working software over comprehensive documentation\n3. Customer collaboration over contract negotiation\n4. Responding to change over following a plan', deck:'Agile', tags:['Agile'], ef:2.6, interval:14, reps:5, status:'Review' },
-    { id:'d8', front:'User Story: Định dạng chuẩn là gì?', back:'As a [type of user], I want [goal] so that [reason/benefit].\n\nVí dụ: "As a customer, I want to track my order so that I know when to expect delivery."', deck:'BA-SQL', tags:['User Story','BA'], ef:2.4, interval:6, reps:3, status:'Review' },
-    { id:'d9', front:'"Mitigate" nghĩa là gì trong business context?', back:'(v) Giảm thiểu, làm nhẹ bớt (rủi ro, tác động tiêu cực).\n\n"We need to mitigate the risks associated with this product launch."', deck:'IELTS', tags:['Vocabulary','Business English'], ef:2.2, interval:2, reps:1, status:'Learning' },
-    { id:'d10', front:'Scrum: Sự khác biệt giữa Product Backlog và Sprint Backlog?', back:'Product Backlog: toàn bộ tính năng/yêu cầu của sản phẩm, do PO quản lý.\nSprint Backlog: tập con được chọn cho sprint hiện tại, do Dev team quản lý.', deck:'Agile', tags:['Scrum','Agile'], ef:2.7, interval:10, reps:4, status:'Review' },
-    { id:'d11', front:'KYC là gì trong Fintech?', back:'Know Your Customer — quy trình xác minh danh tính khách hàng. Bắt buộc theo pháp lý AML (Anti-Money Laundering). Ở VN do NHNN quy định.', deck:'Fintech', tags:['Fintech','Compliance'], ef:2.5, interval:1, reps:0, status:'New' },
-    { id:'d12', front:'Acceptance Criteria là gì?', back:'Điều kiện cụ thể mà một User Story phải đáp ứng để được coi là "Done". Thường viết theo định dạng Given/When/Then (BDD) hoặc checklist.', deck:'BA-SQL', tags:['BA','User Story'], ef:2.3, interval:5, reps:2, status:'Learning' },
-  ];
-  setStatus('ok', `Demo mode — ${S.cards.length} thẻ mẫu`);
-  updateSetupStats();
-  toast('Đang chạy Demo mode — nhấn ⚙️ để kết nối Notion thật');
-}
-
-// ═══════════════════════════════════════════════
-// SETUP STATS
-// ═══════════════════════════════════════════════
-function updateSetupStats(){
-  const due   = S.cards.length;
-  const newC  = S.cards.filter(c=>c.status==='New').length;
-  const total = due; // in real mode, could be all cards
-  const mastered = S.cards.filter(c=>c.status==='Mastered').length;
-  document.getElementById('st-due').textContent     = due;
-  document.getElementById('st-new').textContent     = newC;
-  document.getElementById('st-total').textContent   = total;
-  document.getElementById('st-mastered').textContent = mastered;
-
-  // Deck counts
-  const deckIds = ['all','BA-SQL','IELTS','Fintech','Self-study','Agile'];
-  deckIds.forEach(d => {
-    const el = document.getElementById('cnt-'+d);
-    if(!el) return;
-    const count = d==='all' ? S.cards.length : S.cards.filter(c=>c.deck===d).length;
-    el.textContent = `${count} thẻ đến hạn`;
-  });
-}
-
-function selectDeck(el){
-  document.querySelectorAll('.deck-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-  S.selectedDeck = el.dataset.deck;
-}
-
-// ═══════════════════════════════════════════════
-// SESSION
-// ═══════════════════════════════════════════════
-function startSession(){
-  let pool = S.selectedDeck==='all'
-    ? [...S.cards]
-    : S.cards.filter(c=>c.deck===S.selectedDeck);
-
-  if(!pool.length){
-    toast('Không có thẻ nào đến hạn trong bộ thẻ này!');
-    return;
-  }
-
-  // Shuffle & limit
-  pool = pool.sort(()=>Math.random()-.5).slice(0, S.limit);
-  S.queue   = pool;
-  S.idx     = 0;
-  S.results = [];
-  S.passCount = 0;
-  S.failCount = 0;
-
-  showScreen('screen-review');
-  document.getElementById('deck-label').textContent =
-    S.selectedDeck==='all' ? 'Tất cả bộ thẻ' : S.selectedDeck;
-  showCard(0);
-}
-
-function showCard(i){
-  if(i >= S.queue.length){ endSession(); return; }
-  const card = S.queue[i];
-  S.current  = card;
-  S.isFlipped = false;
-
-  // Reset card
-  const body = document.getElementById('card-body');
-  body.classList.remove('flipped');
-  document.getElementById('rating-panel').classList.remove('visible');
-  document.getElementById('flip-prompt').classList.remove('hidden');
-
-  // Fill content
-  document.getElementById('card-front-text').textContent = card.front;
-  document.getElementById('card-back-text').textContent  = card.back;
-  document.getElementById('card-back-sub').textContent   = '';
-  document.getElementById('r-deck').textContent  = card.deck;
-  document.getElementById('r-ef').textContent    = `EF ${card.ef.toFixed(2)}`;
-  document.getElementById('r-status-badge').textContent = card.status || 'New';
-  document.getElementById('r-tags').textContent =
-    card.tags?.length ? card.tags.slice(0,2).join(' · ') : 'No tags';
-
-  // Progress
-  const total = S.queue.length;
-  const pct   = Math.round((i / total) * 100);
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('card-counter').textContent  = `${i+1} / ${total}`;
-  document.getElementById('session-stats-mini').textContent =
-    `${S.passCount} đúng · ${S.failCount} sai`;
-}
-
-function flipCard(){
-  if(S.isFlipped) return;
-  S.isFlipped = true;
-  document.getElementById('card-body').classList.add('flipped');
-  document.getElementById('flip-prompt').classList.add('hidden');
-  setTimeout(()=>{
-    document.getElementById('rating-panel').classList.add('visible');
-  }, 300);
-}
-
-// ═══════════════════════════════════════════════
-// SM-2 ALGORITHM
-// ═══════════════════════════════════════════════
-function sm2(card, q){
-  let {ef, interval, reps} = card;
-
-  let newEf = ef + (0.1 - (5-q) * (0.08 + (5-q)*0.02));
-  newEf = Math.max(1.3, newEf);
-
-  let newReps, newInterval;
-  if(q < 3){
-    newReps = 0; newInterval = 1;
-  } else {
-    newReps = reps + 1;
-    if(reps === 0)     newInterval = 1;
-    else if(reps === 1) newInterval = 6;
-    else               newInterval = Math.round(interval * ef);
-  }
-
-  const nextDate = new Date();
-  nextDate.setDate(nextDate.getDate() + newInterval);
-
-  let newStatus = card.status;
-  if(q < 3)              newStatus = 'Learning';
-  else if(newReps === 1) newStatus = 'Learning';
-  else if(newReps < 5)   newStatus = 'Review';
-  else                   newStatus = 'Mastered';
-
-  return {
-    newEf, newInterval, newReps,
-    nextDate: localDate(nextDate),
-    newStatus,
-    pass: q >= 3,
-  };
-}
-
-async function rateCard(q){
-  if(!S.isFlipped) return;
-
-  // Animate button
-  document.querySelectorAll('.rb').forEach(b=>b.classList.remove('pressed'));
-  document.querySelectorAll('.rb')[q]?.classList.add('pressed');
-
-  const card   = S.current;
-  const result = sm2(card, q);
-
-  // Update local state for display
-  card.ef       = result.newEf;
-  card.interval = result.newInterval;
-  card.reps     = result.newReps;
-
-  S.results.push({ card, q, pass: result.pass, result });
-  if(result.pass) S.passCount++; else S.failCount++;
-
-  // Sync to Notion (non-blocking)
-  if(!S.isDemo) syncCard(card.id, result);
-
-  // Next card after brief pause
-  setTimeout(()=>{
-    document.getElementById('card-body').classList.remove('flipped');
-    document.getElementById('rating-panel').classList.remove('visible');
-    document.querySelectorAll('.rb').forEach(b=>b.classList.remove('pressed'));
-    S.idx++;
-    showCard(S.idx);
-  }, 320);
-}
-
-// ═══════════════════════════════════════════════
-// NOTION SYNC
-// ═══════════════════════════════════════════════
-async function syncCard(pageId, result){
-  if(!S.cfg.token || !S.cfg.cardDb) return;
-  const p = PROP();
-  try{
-    const props = {
-      [p.ef]:       { number: parseFloat(result.newEf.toFixed(3)) },
-      [p.interval]: { number: result.newInterval },
-      [p.reps]:     { number: result.newReps },
-      [p.next]:     { date:   { start: result.nextDate } },
-      [p.status]:   { status: { name: result.newStatus } },
-    };
-    await notionPatch(pageId, props);
-
-    // Log entry
-    if(S.cfg.logDb){
-      const today = new Date();
-      const logCard = S.results.find(r=>r.card.id===pageId);
-      await notionCreate(S.cfg.logDb, {
-        'Name':        { title:  [{ text: { content: `LOG-${today.toISOString().substring(0,10)}` } }] },
-        'Card':        { relation: [{ id: pageId }] },
-        'Date':        { date:   { start: today.toISOString() } },
-        'Rating':      { select: { name: String(logCard?.q ?? 0) } },
-        'New Interval':{ number: result.newInterval },
-        'New EF':      { number: parseFloat(result.newEf.toFixed(3)) },
+      const PROP = () => ({
+        front: S.cfg.front || "Front",
+        back: S.cfg.back || "Back",
+        deck: S.cfg.deck || "Deck",
+        next: S.cfg.next || "Next Review",
+        ef: S.cfg.ef || "EF",
+        interval: S.cfg.interval || "Interval",
+        reps: S.cfg.reps || "Repetitions",
+        status: S.cfg.status || "Status",
+        tags: "Tags",
+        lastRating: "Last Rating",
       });
-    }
-  }catch(err){
-    console.warn('Sync error:', err.message);
-  }
-}
 
-// ═══════════════════════════════════════════════
-// END SESSION
-// ═══════════════════════════════════════════════
-function endSession(){
-  showScreen('screen-done');
+      // ═══════════════════════════════════════════════
+      // INIT
+      // ═══════════════════════════════════════════════
+      (function init() {
+        loadCfg();
+        document.addEventListener("keydown", onKey);
+        if (S.cfg.token && S.cfg.cardDb) {
+          fetchCards();
+        } else {
+          runDemo();
+        }
+      })();
 
-  const total = S.results.length;
-  const pass  = S.passCount;
-  const fail  = S.failCount;
-  const rate  = total > 0 ? Math.round((pass/total)*100) : 0;
+      // ═══════════════════════════════════════════════
+      // CONFIG
+      // ═══════════════════════════════════════════════
+      function loadCfg() {
+        try {
+          const c = JSON.parse(localStorage.getItem("srs_cfg") || "{}");
+          S.cfg = c;
+          if (c.token) document.getElementById("c-token").value = c.token;
+          if (c.cardDb) document.getElementById("c-card-db").value = c.cardDb;
+          if (c.logDb) document.getElementById("c-log-db").value = c.logDb;
+          if (c.front) document.getElementById("c-front").value = c.front;
+          if (c.back) document.getElementById("c-back").value = c.back;
+          if (c.deck) document.getElementById("c-deck").value = c.deck;
+          if (c.next) document.getElementById("c-next").value = c.next;
+          if (c.ef) document.getElementById("c-ef").value = c.ef;
+          if (c.interval)
+            document.getElementById("c-interval").value = c.interval;
+          if (c.reps) document.getElementById("c-reps").value = c.reps;
+          if (c.status) document.getElementById("c-status").value = c.status;
+        } catch (e) {}
+      }
 
-  document.getElementById('ds-total').textContent = total;
-  document.getElementById('ds-pass').textContent  = pass;
-  document.getElementById('ds-fail').textContent  = fail;
-  document.getElementById('ds-rate').textContent  = rate + '%';
+      function saveCfg() {
+        const c = {
+          token: document.getElementById("c-token").value.trim(),
+          cardDb: document
+            .getElementById("c-card-db")
+            .value.trim()
+            .replace(/-/g, ""),
+          logDb: document
+            .getElementById("c-log-db")
+            .value.trim()
+            .replace(/-/g, ""),
+          front: document.getElementById("c-front").value.trim(),
+          back: document.getElementById("c-back").value.trim(),
+          deck: document.getElementById("c-deck").value.trim(),
+          next: document.getElementById("c-next").value.trim(),
+          ef: document.getElementById("c-ef").value.trim(),
+          interval: document.getElementById("c-interval").value.trim(),
+          reps: document.getElementById("c-reps").value.trim(),
+          status: document.getElementById("c-status").value.trim(),
+        };
+        localStorage.setItem("srs_cfg", JSON.stringify(c));
+        S.cfg = c;
+        S.isDemo = false;
+        closeCfg();
+        fetchCards();
+      }
 
-  const deckName = S.selectedDeck === 'all' ? 'toàn bộ bộ thẻ' : S.selectedDeck;
-  document.getElementById('done-title').textContent =
-    rate >= 80 ? 'Xuất sắc!' : rate >= 60 ? 'Tốt lắm!' : 'Session hoàn thành!';
-  document.getElementById('done-sub').textContent =
-    `Bạn đã ôn ${total} thẻ từ ${deckName}. Retention rate: ${rate}%.`;
+      function openCfg() {
+        document.getElementById("cfg-overlay").classList.add("show");
+      }
+      function closeCfg() {
+        document.getElementById("cfg-overlay").classList.remove("show");
+      }
+      function closeCfgOutside(e) {
+        if (e.target === document.getElementById("cfg-overlay")) closeCfg();
+      }
 
-  // Breakdown bar
-  const counts = [0,0,0,0,0,0];
-  S.results.forEach(r => counts[r.q]++);
-  const barColors = ['#E24B4A','#F09595','#EF9F27','#9FE1CB','#1D9E75','#085041'];
-  const barLabels = ['0 — Quên','1 — Mờ','2 — Khó','3 — Nhớ','4 — Dễ','5 — Rất dễ'];
-  const wrap  = document.getElementById('bbar-wrap');
-  const legend= document.getElementById('bbar-legend');
-  wrap.innerHTML = ''; legend.innerHTML = '';
-  counts.forEach((n, i) => {
-    if(!n) return;
-    const pct = Math.round((n/total)*100);
-    const bar = document.createElement('div');
-    bar.className = 'bbar';
-    bar.style.cssText = `width:${pct}%;background:${barColors[i]}`;
-    wrap.appendChild(bar);
-    const li = document.createElement('div');
-    li.className = 'bl-item';
-    li.innerHTML = `<div class="bl-dot" style="background:${barColors[i]}"></div>${barLabels[i]}: <strong>${n}</strong>`;
-    legend.appendChild(li);
-  });
+      // ═══════════════════════════════════════════════
+      // NOTION API
+      // ═══════════════════════════════════════════════
+      async function notionQuery(dbId, filter, sorts) {
+        const body = { page_size: 100 };
+        if (filter) body.filter = filter;
+        if (sorts) body.sorts = sorts;
 
-  if(!S.isDemo){
-    document.getElementById('sync-status-done').textContent = '✓ Dữ liệu đã được đồng bộ lên Notion';
-  }
-}
+        const res = await fetch(
+          `https://api.notion.com/v1/databases/${dbId}/query`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${S.cfg.token}`,
+              "Notion-Version": "2022-06-28",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+          }
+        );
+        if (!res.ok) throw new Error(`Notion API ${res.status}`);
+        return res.json();
+      }
 
-// ═══════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-function goSetup(){
-  showScreen('screen-setup');
-  if(!S.isDemo && S.cfg.token) fetchCards();
-}
-function exitSession(){ if(confirm('Thoát session? Tiến độ sẽ không được lưu.')) goSetup() }
-function showLog(){ toast('Xem Review Log trong Notion của bạn') }
+      async function notionPatch(pageId, properties) {
+        const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${S.cfg.token}`,
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ properties }),
+        });
+        if (!res.ok) throw new Error(`Notion PATCH ${res.status}`);
+        return res.json();
+      }
 
-// ═══════════════════════════════════════════════
-// STATUS + TOAST
-// ═══════════════════════════════════════════════
-function setStatus(type, msg){
-  document.getElementById('sdot').className  = 'sdot ' + type;
-  document.getElementById('stext').textContent = msg;
-}
-function toast(msg){
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 3000);
-}
+      async function notionCreate(dbId, properties) {
+        const res = await fetch("https://api.notion.com/v1/pages", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${S.cfg.token}`,
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ parent: { database_id: dbId }, properties }),
+        });
+        if (!res.ok) throw new Error(`Notion CREATE ${res.status}`);
+        return res.json();
+      }
 
-// ═══════════════════════════════════════════════
-// KEYBOARD
-// ═══════════════════════════════════════════════
-function onKey(e){
-  const screen = document.querySelector('.screen.active')?.id;
-  if(screen === 'screen-setup'){
-    if(e.key === 'Enter') startSession();
-    return;
-  }
-  if(screen !== 'screen-review') return;
-  if(e.key === ' '){ e.preventDefault(); flipCard(); return; }
-  if(e.key === 'ArrowRight' || e.key === 'Enter'){ flipCard(); return; }
-  if(['1','2','3','4','5','6'].includes(e.key)){
-    const q = parseInt(e.key) - 1; // 1→0, 2→1, ... 6→5
-    if(S.isFlipped) rateCard(q);
-  }
-}
+      // ═══════════════════════════════════════════════
+      // FETCH CARDS
+      // ═══════════════════════════════════════════════
+      async function fetchCards() {
+        setStatus("loading", "Đang tải thẻ từ Notion…");
+        try {
+          const today = localDate(new Date());
+          const p = PROP();
+          const res = await fetch("/api/srs?action=due&deck=" + S.selectedDeck);
+          const data = await res.json();
+          S.cards = data.cards || [];
+          setStatus("ok", `Đã tải ${S.cards.length} thẻ đến hạn`);
+          updateSetupStats();
+        } catch (err) {
+          setStatus("err", `Lỗi: ${err.message}`);
+          toast("Không kết nối được Notion — chuyển Demo mode");
+          runDemo();
+        }
+      }
 
-// ═══════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════
-function localDate(d){
-  return (d||new Date()).toLocaleDateString('en-CA');
-}
+      function parseCards(pages) {
+        return pages
+          .map((page) => {
+            const pr = page.properties || {};
+            const p = PROP();
+            return {
+              id: page.id,
+              front: getText(pr[p.front]),
+              back: getText(pr[p.back]),
+              deck: getSelect(pr[p.deck]) || "General",
+              tags: getMultiSelect(pr[p.tags]),
+              ef: pr[p.ef]?.number ?? 2.5,
+              interval: pr[p.interval]?.number ?? 1,
+              reps: pr[p.reps]?.number ?? 0,
+              status: getStatus(pr[p.status]),
+              next: pr[p.next]?.date?.start ?? null,
+            };
+          })
+          .filter((c) => c.front);
+      }
 
-// Sync limit slider
-document.getElementById('limit-slider').addEventListener('input', function(){
-  S.limit = parseInt(this.value);
-});
-</script>
-</body>
+      function getText(prop) {
+        if (!prop) return "";
+        if (prop.title) return prop.title.map((t) => t.plain_text).join("");
+        if (prop.rich_text)
+          return prop.rich_text.map((t) => t.plain_text).join("");
+        return "";
+      }
+      function getSelect(prop) {
+        return prop?.select?.name || "";
+      }
+      function getStatus(prop) {
+        return prop?.status?.name || prop?.select?.name || "";
+      }
+      function getMultiSelect(prop) {
+        return prop?.multi_select?.map((s) => s.name) || [];
+      }
+
+      // ═══════════════════════════════════════════════
+      // DEMO DATA
+      // ═══════════════════════════════════════════════
+      function runDemo() {
+        S.isDemo = true;
+        S.cards = [
+          {
+            id: "d1",
+            front: "Business Analyst làm gì trong một sprint?",
+            back: "BA làm việc cùng PO để clarify requirements, viết User Stories, tham gia Sprint Planning và Review, đảm bảo team hiểu rõ acceptance criteria.",
+            deck: "BA-SQL",
+            tags: ["Agile", "BA"],
+            ef: 2.5,
+            interval: 1,
+            reps: 0,
+            status: "New",
+          },
+          {
+            id: "d2",
+            front: "BRD là gì? Khác gì FRD?",
+            back: "BRD (Business Requirements Document) mô tả nhu cầu business cấp cao. FRD (Functional Requirements Document) mô tả chi tiết tính năng hệ thống cần có.",
+            deck: "BA-SQL",
+            tags: ["BRD"],
+            ef: 2.1,
+            interval: 3,
+            reps: 2,
+            status: "Learning",
+          },
+          {
+            id: "d3",
+            front: "SQL: Sự khác biệt giữa INNER JOIN và LEFT JOIN?",
+            back: "INNER JOIN: chỉ trả về rows có match ở cả 2 bảng.\nLEFT JOIN: trả về tất cả rows từ bảng trái, NULL nếu không match ở bảng phải.",
+            deck: "BA-SQL",
+            tags: ["SQL"],
+            ef: 2.8,
+            interval: 7,
+            reps: 4,
+            status: "Review",
+          },
+          {
+            id: "d4",
+            front: 'Từ "Ubiquitous" nghĩa là gì?',
+            back: '(adj) Hiện diện ở mọi nơi, phổ biến rộng rãi.\n\n"Smartphones have become ubiquitous in modern society."',
+            deck: "IELTS",
+            tags: ["Vocabulary", "C1"],
+            ef: 1.8,
+            interval: 1,
+            reps: 1,
+            status: "Learning",
+          },
+          {
+            id: "d5",
+            front: "IELTS Writing Task 2: Cấu trúc một body paragraph?",
+            back: "1. Topic sentence — nêu luận điểm chính\n2. Explanation — giải thích tại sao\n3. Example — ví dụ cụ thể\n4. Link — kết nối lại với đề bài",
+            deck: "IELTS",
+            tags: ["Writing"],
+            ef: 2.3,
+            interval: 4,
+            reps: 3,
+            status: "Review",
+          },
+          {
+            id: "d6",
+            front: "MoMo là ví điện tử hay ngân hàng số?",
+            back: "MoMo là ví điện tử (e-wallet), không phải ngân hàng. Hoạt động theo mô hình PSP (Payment Service Provider), không nhận tiền gửi như ngân hàng truyền thống.",
+            deck: "Fintech",
+            tags: ["Fintech", "Vietnam"],
+            ef: 2.5,
+            interval: 1,
+            reps: 0,
+            status: "New",
+          },
+          {
+            id: "d7",
+            front: "Agile Manifesto: 4 giá trị cốt lõi?",
+            back: "1. Individuals & interactions over processes & tools\n2. Working software over comprehensive documentation\n3. Customer collaboration over contract negotiation\n4. Responding to change over following a plan",
+            deck: "Agile",
+            tags: ["Agile"],
+            ef: 2.6,
+            interval: 14,
+            reps: 5,
+            status: "Review",
+          },
+          {
+            id: "d8",
+            front: "User Story: Định dạng chuẩn là gì?",
+            back: 'As a [type of user], I want [goal] so that [reason/benefit].\n\nVí dụ: "As a customer, I want to track my order so that I know when to expect delivery."',
+            deck: "BA-SQL",
+            tags: ["User Story", "BA"],
+            ef: 2.4,
+            interval: 6,
+            reps: 3,
+            status: "Review",
+          },
+          {
+            id: "d9",
+            front: '"Mitigate" nghĩa là gì trong business context?',
+            back: '(v) Giảm thiểu, làm nhẹ bớt (rủi ro, tác động tiêu cực).\n\n"We need to mitigate the risks associated with this product launch."',
+            deck: "IELTS",
+            tags: ["Vocabulary", "Business English"],
+            ef: 2.2,
+            interval: 2,
+            reps: 1,
+            status: "Learning",
+          },
+          {
+            id: "d10",
+            front:
+              "Scrum: Sự khác biệt giữa Product Backlog và Sprint Backlog?",
+            back: "Product Backlog: toàn bộ tính năng/yêu cầu của sản phẩm, do PO quản lý.\nSprint Backlog: tập con được chọn cho sprint hiện tại, do Dev team quản lý.",
+            deck: "Agile",
+            tags: ["Scrum", "Agile"],
+            ef: 2.7,
+            interval: 10,
+            reps: 4,
+            status: "Review",
+          },
+          {
+            id: "d11",
+            front: "KYC là gì trong Fintech?",
+            back: "Know Your Customer — quy trình xác minh danh tính khách hàng. Bắt buộc theo pháp lý AML (Anti-Money Laundering). Ở VN do NHNN quy định.",
+            deck: "Fintech",
+            tags: ["Fintech", "Compliance"],
+            ef: 2.5,
+            interval: 1,
+            reps: 0,
+            status: "New",
+          },
+          {
+            id: "d12",
+            front: "Acceptance Criteria là gì?",
+            back: 'Điều kiện cụ thể mà một User Story phải đáp ứng để được coi là "Done". Thường viết theo định dạng Given/When/Then (BDD) hoặc checklist.',
+            deck: "BA-SQL",
+            tags: ["BA", "User Story"],
+            ef: 2.3,
+            interval: 5,
+            reps: 2,
+            status: "Learning",
+          },
+        ];
+        setStatus("ok", `Demo mode — ${S.cards.length} thẻ mẫu`);
+        updateSetupStats();
+        toast("Đang chạy Demo mode — nhấn ⚙️ để kết nối Notion thật");
+      }
+
+      // ═══════════════════════════════════════════════
+      // SETUP STATS
+      // ═══════════════════════════════════════════════
+      function updateSetupStats() {
+        const due = S.cards.length;
+        const newC = S.cards.filter((c) => c.status === "New").length;
+        const total = due; // in real mode, could be all cards
+        const mastered = S.cards.filter((c) => c.status === "Mastered").length;
+        document.getElementById("st-due").textContent = due;
+        document.getElementById("st-new").textContent = newC;
+        document.getElementById("st-total").textContent = total;
+        document.getElementById("st-mastered").textContent = mastered;
+
+        // Deck counts
+        const deckIds = [
+          "all",
+          "BA-SQL",
+          "IELTS",
+          "Fintech",
+          "Self-study",
+          "Agile",
+        ];
+        deckIds.forEach((d) => {
+          const el = document.getElementById("cnt-" + d);
+          if (!el) return;
+          const count =
+            d === "all"
+              ? S.cards.length
+              : S.cards.filter((c) => c.deck === d).length;
+          el.textContent = `${count} thẻ đến hạn`;
+        });
+      }
+
+      function selectDeck(el) {
+        document
+          .querySelectorAll(".deck-btn")
+          .forEach((b) => b.classList.remove("sel"));
+        el.classList.add("sel");
+        S.selectedDeck = el.dataset.deck;
+      }
+
+      // ═══════════════════════════════════════════════
+      // SESSION
+      // ═══════════════════════════════════════════════
+      function startSession() {
+        let pool =
+          S.selectedDeck === "all"
+            ? [...S.cards]
+            : S.cards.filter((c) => c.deck === S.selectedDeck);
+
+        if (!pool.length) {
+          toast("Không có thẻ nào đến hạn trong bộ thẻ này!");
+          return;
+        }
+
+        // Shuffle & limit
+        pool = pool.sort(() => Math.random() - 0.5).slice(0, S.limit);
+        S.queue = pool;
+        S.idx = 0;
+        S.results = [];
+        S.passCount = 0;
+        S.failCount = 0;
+
+        showScreen("screen-review");
+        document.getElementById("deck-label").textContent =
+          S.selectedDeck === "all" ? "Tất cả bộ thẻ" : S.selectedDeck;
+        showCard(0);
+      }
+
+      function showCard(i) {
+        if (i >= S.queue.length) {
+          endSession();
+          return;
+        }
+        const card = S.queue[i];
+        S.current = card;
+        S.isFlipped = false;
+
+        // Reset card
+        const body = document.getElementById("card-body");
+        body.classList.remove("flipped");
+        document.getElementById("rating-panel").classList.remove("visible");
+        document.getElementById("flip-prompt").classList.remove("hidden");
+
+        // Fill content
+        document.getElementById("card-front-text").textContent = card.front;
+        document.getElementById("card-back-text").textContent = card.back;
+        document.getElementById("card-back-sub").textContent = "";
+        document.getElementById("r-deck").textContent = card.deck;
+        document.getElementById("r-ef").textContent = `EF ${card.ef.toFixed(
+          2
+        )}`;
+        document.getElementById("r-status-badge").textContent =
+          card.status || "New";
+        document.getElementById("r-tags").textContent = card.tags?.length
+          ? card.tags.slice(0, 2).join(" · ")
+          : "No tags";
+
+        // Progress
+        const total = S.queue.length;
+        const pct = Math.round((i / total) * 100);
+        document.getElementById("progress-fill").style.width = pct + "%";
+        document.getElementById("card-counter").textContent = `${
+          i + 1
+        } / ${total}`;
+        document.getElementById(
+          "session-stats-mini"
+        ).textContent = `${S.passCount} đúng · ${S.failCount} sai`;
+      }
+
+      function flipCard() {
+        if (S.isFlipped) return;
+        S.isFlipped = true;
+        document.getElementById("card-body").classList.add("flipped");
+        document.getElementById("flip-prompt").classList.add("hidden");
+        setTimeout(() => {
+          document.getElementById("rating-panel").classList.add("visible");
+        }, 300);
+      }
+
+      // ═══════════════════════════════════════════════
+      // SM-2 ALGORITHM
+      // ═══════════════════════════════════════════════
+      function sm2(card, q) {
+        let { ef, interval, reps } = card;
+
+        let newEf = ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+        newEf = Math.max(1.3, newEf);
+
+        let newReps, newInterval;
+        if (q < 3) {
+          newReps = 0;
+          newInterval = 1;
+        } else {
+          newReps = reps + 1;
+          if (reps === 0) newInterval = 1;
+          else if (reps === 1) newInterval = 6;
+          else newInterval = Math.round(interval * ef);
+        }
+
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + newInterval);
+
+        let newStatus = card.status;
+        if (q < 3) newStatus = "Learning";
+        else if (newReps === 1) newStatus = "Learning";
+        else if (newReps < 5) newStatus = "Review";
+        else newStatus = "Mastered";
+
+        return {
+          newEf,
+          newInterval,
+          newReps,
+          nextDate: localDate(nextDate),
+          newStatus,
+          pass: q >= 3,
+        };
+      }
+
+      async function rateCard(q) {
+        if (!S.isFlipped) return;
+
+        // Animate button
+        document
+          .querySelectorAll(".rb")
+          .forEach((b) => b.classList.remove("pressed"));
+        document.querySelectorAll(".rb")[q]?.classList.add("pressed");
+
+        const card = S.current;
+        const result = sm2(card, q);
+
+        // Update local state for display
+        card.ef = result.newEf;
+        card.interval = result.newInterval;
+        card.reps = result.newReps;
+
+        S.results.push({ card, q, pass: result.pass, result });
+        if (result.pass) S.passCount++;
+        else S.failCount++;
+
+        // Sync to Notion (non-blocking)
+        if (!S.isDemo) syncCard(card.id, result);
+
+        // Next card after brief pause
+        setTimeout(() => {
+          document.getElementById("card-body").classList.remove("flipped");
+          document.getElementById("rating-panel").classList.remove("visible");
+          document
+            .querySelectorAll(".rb")
+            .forEach((b) => b.classList.remove("pressed"));
+          S.idx++;
+          showCard(S.idx);
+        }, 320);
+      }
+
+      // ═══════════════════════════════════════════════
+      // NOTION SYNC
+      // ═══════════════════════════════════════════════
+      async function syncCard(pageId, result) {
+        if (!S.cfg.token || !S.cfg.cardDb) return;
+        const p = PROP();
+        try {
+          const props = {
+            [p.ef]: { number: parseFloat(result.newEf.toFixed(3)) },
+            [p.interval]: { number: result.newInterval },
+            [p.reps]: { number: result.newReps },
+            [p.next]: { date: { start: result.nextDate } },
+            [p.status]: { status: { name: result.newStatus } },
+          };
+          await fetch("/api/srs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "review", pageId, ...result }),
+          });
+
+          // Log entry
+          if (S.cfg.logDb) {
+            const today = new Date();
+            const logCard = S.results.find((r) => r.card.id === pageId);
+            await notionCreate(S.cfg.logDb, {
+              Name: {
+                title: [
+                  {
+                    text: {
+                      content: `LOG-${today.toISOString().substring(0, 10)}`,
+                    },
+                  },
+                ],
+              },
+              Card: { relation: [{ id: pageId }] },
+              Date: { date: { start: today.toISOString() } },
+              Rating: { select: { name: String(logCard?.q ?? 0) } },
+              "New Interval": { number: result.newInterval },
+              "New EF": { number: parseFloat(result.newEf.toFixed(3)) },
+            });
+          }
+        } catch (err) {
+          console.warn("Sync error:", err.message);
+        }
+      }
+
+      // ═══════════════════════════════════════════════
+      // END SESSION
+      // ═══════════════════════════════════════════════
+      function endSession() {
+        showScreen("screen-done");
+
+        const total = S.results.length;
+        const pass = S.passCount;
+        const fail = S.failCount;
+        const rate = total > 0 ? Math.round((pass / total) * 100) : 0;
+
+        document.getElementById("ds-total").textContent = total;
+        document.getElementById("ds-pass").textContent = pass;
+        document.getElementById("ds-fail").textContent = fail;
+        document.getElementById("ds-rate").textContent = rate + "%";
+
+        const deckName =
+          S.selectedDeck === "all" ? "toàn bộ bộ thẻ" : S.selectedDeck;
+        document.getElementById("done-title").textContent =
+          rate >= 80
+            ? "Xuất sắc!"
+            : rate >= 60
+            ? "Tốt lắm!"
+            : "Session hoàn thành!";
+        document.getElementById(
+          "done-sub"
+        ).textContent = `Bạn đã ôn ${total} thẻ từ ${deckName}. Retention rate: ${rate}%.`;
+
+        // Breakdown bar
+        const counts = [0, 0, 0, 0, 0, 0];
+        S.results.forEach((r) => counts[r.q]++);
+        const barColors = [
+          "#E24B4A",
+          "#F09595",
+          "#EF9F27",
+          "#9FE1CB",
+          "#1D9E75",
+          "#085041",
+        ];
+        const barLabels = [
+          "0 — Quên",
+          "1 — Mờ",
+          "2 — Khó",
+          "3 — Nhớ",
+          "4 — Dễ",
+          "5 — Rất dễ",
+        ];
+        const wrap = document.getElementById("bbar-wrap");
+        const legend = document.getElementById("bbar-legend");
+        wrap.innerHTML = "";
+        legend.innerHTML = "";
+        counts.forEach((n, i) => {
+          if (!n) return;
+          const pct = Math.round((n / total) * 100);
+          const bar = document.createElement("div");
+          bar.className = "bbar";
+          bar.style.cssText = `width:${pct}%;background:${barColors[i]}`;
+          wrap.appendChild(bar);
+          const li = document.createElement("div");
+          li.className = "bl-item";
+          li.innerHTML = `<div class="bl-dot" style="background:${barColors[i]}"></div>${barLabels[i]}: <strong>${n}</strong>`;
+          legend.appendChild(li);
+        });
+
+        if (!S.isDemo) {
+          document.getElementById("sync-status-done").textContent =
+            "✓ Dữ liệu đã được đồng bộ lên Notion";
+        }
+      }
+
+      // ═══════════════════════════════════════════════
+      // NAVIGATION
+      // ═══════════════════════════════════════════════
+      function showScreen(id) {
+        document
+          .querySelectorAll(".screen")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+      }
+      function goSetup() {
+        showScreen("screen-setup");
+        if (!S.isDemo && S.cfg.token) fetchCards();
+      }
+      function exitSession() {
+        if (confirm("Thoát session? Tiến độ sẽ không được lưu.")) goSetup();
+      }
+      function showLog() {
+        toast("Xem Review Log trong Notion của bạn");
+      }
+
+      // ═══════════════════════════════════════════════
+      // STATUS + TOAST
+      // ═══════════════════════════════════════════════
+      function setStatus(type, msg) {
+        document.getElementById("sdot").className = "sdot " + type;
+        document.getElementById("stext").textContent = msg;
+      }
+      function toast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        setTimeout(() => el.classList.remove("show"), 3000);
+      }
+
+      // ═══════════════════════════════════════════════
+      // KEYBOARD
+      // ═══════════════════════════════════════════════
+      function onKey(e) {
+        const screen = document.querySelector(".screen.active")?.id;
+        if (screen === "screen-setup") {
+          if (e.key === "Enter") startSession();
+          return;
+        }
+        if (screen !== "screen-review") return;
+        if (e.key === " ") {
+          e.preventDefault();
+          flipCard();
+          return;
+        }
+        if (e.key === "ArrowRight" || e.key === "Enter") {
+          flipCard();
+          return;
+        }
+        if (["1", "2", "3", "4", "5", "6"].includes(e.key)) {
+          const q = parseInt(e.key) - 1; // 1→0, 2→1, ... 6→5
+          if (S.isFlipped) rateCard(q);
+        }
+      }
+
+      // ═══════════════════════════════════════════════
+      // UTILS
+      // ═══════════════════════════════════════════════
+      function localDate(d) {
+        return (d || new Date()).toLocaleDateString("en-CA");
+      }
+
+      // Sync limit slider
+      document
+        .getElementById("limit-slider")
+        .addEventListener("input", function () {
+          S.limit = parseInt(this.value);
+        });
+    </script>
+  </body>
 </html>
