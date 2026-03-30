@@ -2122,14 +2122,15 @@
           "x-srs-prop-reps": cfg.reps || "Repetitions",
           "x-srs-prop-status": cfg.status || "Status",
 
-          "x-srs-log-prop-title": cfg.status || "ID",
-          "x-srs-log-prop-card": cfg.status || "Card",
-          "x-srs-log-prop-date": cfg.status || "Date",
-          "x-srs-log-prop-rating": cfg.status || "Rating",
-          "x-srs-log-prop-interval": cfg.status || "New Interval",
-          "x-srs-log-prop-ef": cfg.status || "New EF",
-          "x-srs-log-prop-deck": cfg.status || "Deck",
-          "x-srs-log-prop-result": cfg.status || "Result",
+          "x-srs-log-prop-title": cfg.id || "ID",
+          "x-srs-log-prop-card": cfg.card || "Card",
+          "x-srs-log-prop-task": cfg.task || "Task",
+          "x-srs-log-prop-date": cfg.date || "Date",
+          "x-srs-log-prop-rating": cfg.rating || "Rating",
+          "x-srs-log-prop-interval": cfg.newinterval || "New Interval",
+          "x-srs-log-prop-ef": cfg.newef || "New EF",
+          "x-srs-log-prop-deck": cfg.deck || "Deck",
+          "x-srs-log-prop-result": cfg.result || "Result",
           ...extra,
         };
       }
