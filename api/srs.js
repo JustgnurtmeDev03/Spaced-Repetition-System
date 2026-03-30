@@ -1,22 +1,23 @@
 /**
  * /api/srs.js — Vercel serverless proxy cho Notion SRS
- *
  * GET  /api/srs?action=due               → thẻ đến hạn hôm nay
  * GET  /api/srs?action=stats             → tổng quan số liệu
- * GET  /api/srs?action=logs&limit=50     → lịch sử review (MỚI)
+ * GET  /api/srs?action=logs&limit=50     → lịch sử review
+ * GET  /api/srs?action=get-decks         → lấy danh sách bộ thẻ (MỚI)
  * POST /api/srs { action:"review" }      → cập nhật SM-2 sau review
  * POST /api/srs { action:"log" }         → ghi vào Review Log DB
- * POST /api/srs { action:"create" }      → tạo 1 thẻ mới (MỚI)
- * POST /api/srs { action:"import" }      → import hàng loạt từ CSV (MỚI)
+ * POST /api/srs { action:"create" }      → tạo 1 thẻ mới
+ * POST /api/srs { action:"import" }      → import hàng loạt từ CSV
+ * POST /api/srs { action:"delete-deck" } → xóa bộ thẻ (MỚI)
  */
-
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, x-srs-token, x-srs-card-db, x-srs-log-db, x-srs-prop-front, x-srs-prop-back, x-srs-prop-deck, x-srs-prop-tags, x-srs-prop-next, x-srs-prop-ef, x-srs-prop-interval, x-srs-prop-reps, x-srs-prop-status, x-srs-log-prop-title, x-srs-log-prop-card, x-srs-log-prop-date, x-srs-log-prop-rating, x-srs-log-prop-interval, x-srs-log-prop-ef, x-srs-log-prop-deck, x-srs-log-prop-result"
+    "Content-Type, x-srs-token, x-srs-card-db, x-srs-log-db, x-srs-prop-front, x-srs-prop-back, x-srs-prop-deck, x-srs-prop-tags, x-srs-prop-next, x-srs-prop-ef, x-srs-prop-interval, x-srs-prop-reps, x-srs-prop-status, x-srs-log-prop-title, x-srs-log-prop-card, x-srs-log-prop-task, x-srs-log-prop-date, x-srs-log-prop-rating, x-srs-log-prop-interval, x-srs-log-prop-ef, x-srs-log-prop-deck, x-srs-log-prop-result"
   );
+
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const runtime = getRuntimeConfig(req);
@@ -64,12 +65,14 @@ export default async function handler(req, res) {
         const data = await notionQuery(token, cardDb, null, null);
         const all = data.results;
         const today = new Date().toLocaleDateString("en-CA");
+
         // Deck breakdown
         const deckMap = {};
         all.forEach((p) => {
           const d = p.properties[PROP.deck]?.select?.name || "General";
           deckMap[d] = (deckMap[d] || 0) + 1;
         });
+
         return res.status(200).json({
           total: all.length,
           due: all.filter((p) => {
@@ -116,6 +119,48 @@ export default async function handler(req, res) {
         return res.status(200).json({ logs, total: data.results.length });
       }
 
+      // ── get-decks: lấy danh sách bộ thẻ (MỚI) ──────────────────
+      if (action === "get-decks") {
+        const data = await notionQuery(token, cardDb, null, null);
+        const deckMap = {};
+
+        data.results.forEach((page) => {
+          const deckName =
+            page.properties[PROP.deck]?.select?.name || "General";
+          const status = getStatus(page.properties[PROP.status]);
+
+          if (!deckMap[deckName]) {
+            deckMap[deckName] = { total: 0, new: 0, due: 0, mastered: 0 };
+          }
+          deckMap[deckName].total++;
+
+          if (status === "New") deckMap[deckName].new++;
+          if (status === "Mastered") deckMap[deckName].mastered++;
+        });
+
+        // Tính thẻ due
+        const today = new Date().toLocaleDateString("en-CA");
+        const dueData = await notionQuery(token, cardDb, {
+          or: [
+            { property: PROP.next, date: { on_or_before: today } },
+            { property: PROP.next, date: { is_empty: true } },
+          ],
+        });
+
+        dueData.results.forEach((page) => {
+          const deckName =
+            page.properties[PROP.deck]?.select?.name || "General";
+          if (deckMap[deckName]) deckMap[deckName].due++;
+        });
+
+        const decks = Object.entries(deckMap).map(([name, stats]) => ({
+          name,
+          ...stats,
+        }));
+
+        return res.status(200).json({ decks });
+      }
+
       return res.status(400).json({ error: "Unknown action: " + action });
     }
 
@@ -123,7 +168,6 @@ export default async function handler(req, res) {
     // POST
     // ════════════════════════════════════════════
     if (req.method === "POST") {
-      // Parse body (handle both pre-parsed and raw string)
       const body =
         typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
 
@@ -163,17 +207,14 @@ export default async function handler(req, res) {
           newEf,
         } = body;
 
-        // Chuẩn hóa date
         const dateStr =
           typeof date === "string" && date.length >= 10
             ? date.substring(0, 10)
             : new Date().toLocaleDateString("en-CA");
 
-        // Dùng cardFront làm Name để dễ đọc trong Notion
         const nameText = cardFront
           ? cardFront.substring(0, 80)
           : `LOG-${dateStr}`;
-
         const ratingNum = parseInt(rating) || 0;
 
         const props = {
@@ -184,7 +225,6 @@ export default async function handler(req, res) {
           [LOG.ef]: { number: parseFloat(parseFloat(newEf).toFixed(4)) },
         };
 
-        // Thêm các field optional
         if (cardId) props[LOG.card] = { relation: [{ id: cardId }] };
         if (taskId) props[LOG.task] = { relation: [{ id: taskId }] };
         if (cardDeck) props[LOG.deck] = { select: { name: cardDeck } };
@@ -192,17 +232,8 @@ export default async function handler(req, res) {
           select: { name: ratingNum >= 3 ? "Pass" : "Fail" },
         };
 
-        try {
-          await notionCreate(token, logDb, props);
-          return res.status(200).json({ ok: true });
-        } catch (e) {
-          console.error("Log creation error:", e.message);
-          return res.status(500).json({
-            error: "Log thất bại",
-            detail: e.message,
-            hint: "Kiểm tra property names trong Notion DB có khớp với config không",
-          });
-        }
+        await notionCreate(token, logDb, props);
+        return res.status(200).json({ ok: true });
       }
 
       // ── create: tạo 1 thẻ mới ──────────────────
@@ -295,8 +326,6 @@ export default async function handler(req, res) {
 
             await notionCreate(token, cardDb, props);
             results.success++;
-
-            // Delay nhỏ tránh rate limit Notion (3 req/s)
             await new Promise((r) => setTimeout(r, 340));
           } catch (e) {
             results.failed++;
@@ -307,6 +336,51 @@ export default async function handler(req, res) {
         }
 
         return res.status(200).json(results);
+      }
+
+      // ── delete-deck: xóa tất cả thẻ trong bộ (MỚI) ────────────
+      if (body.action === "delete-deck") {
+        const { deckName } = body;
+        if (!deckName?.trim()) {
+          return res.status(400).json({ error: "Thiếu tên bộ thẻ (deckName)" });
+        }
+
+        try {
+          const data = await notionQuery(token, cardDb, {
+            property: PROP.deck,
+            select: { equals: deckName.trim() },
+          });
+
+          const cardsToDelete = data.results;
+          if (cardsToDelete.length === 0) {
+            return res.status(200).json({
+              ok: true,
+              deleted: 0,
+              message: "Không có thẻ nào trong bộ này",
+            });
+          }
+
+          for (const card of cardsToDelete) {
+            await fetch(`https://api.notion.com/v1/pages/${card.id}`, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Notion-Version": "2022-06-28",
+              },
+            });
+            await new Promise((r) => setTimeout(r, 340));
+          }
+
+          return res.status(200).json({
+            ok: true,
+            deleted: cardsToDelete.length,
+            message: `Đã xóa ${cardsToDelete.length} thẻ khỏi bộ "${deckName}"`,
+          });
+        } catch (e) {
+          return res
+            .status(500)
+            .json({ error: "Xóa bộ thẻ thất bại", detail: e.message });
+        }
       }
 
       return res.status(400).json({ error: "Unknown action: " + body.action });
@@ -321,11 +395,9 @@ export default async function handler(req, res) {
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-
 async function notionQuery(token, dbId, filter, sorts) {
   let allResults = [];
   let startCursor;
-
   do {
     const body = { page_size: 100 };
     if (filter) body.filter = filter;
@@ -368,10 +440,12 @@ async function notionPatch(token, pageId, properties) {
     },
     body: JSON.stringify({ properties }),
   });
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Notion PATCH ${res.status}: ${text.substring(0, 200)}`);
   }
+
   return res.json();
 }
 
@@ -464,10 +538,12 @@ async function notionCreate(token, dbId, properties) {
     },
     body: JSON.stringify({ parent: { database_id: dbId }, properties }),
   });
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Notion CREATE ${res.status}: ${text.substring(0, 200)}`);
   }
+
   return res.json();
 }
 
