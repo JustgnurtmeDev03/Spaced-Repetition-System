@@ -129,13 +129,22 @@ export default async function handler(req, res) {
         if (!logDb) return res.status(400).json({ error: "SRS_LOG_DB not configured" });
         const { cardId, date, rating, newInterval, newEf } = body;
 
+        // Log DB property names (env vars with fallback to common names)
+        const logDate     = process.env.SRS_LOG_PROP_DATE      || "Date";
+        const logRating   = process.env.SRS_LOG_PROP_RATING    || "Rating";
+        const logInterval = process.env.SRS_LOG_PROP_INTERVAL  || "New Interval";
+        const logEf       = process.env.SRS_LOG_PROP_EF        || "New EF";
+        const logCard     = process.env.SRS_LOG_PROP_CARD      || "Card";
+
+        const todayStr = date || new Date().toISOString().substring(0, 10);
+
         const properties = {
-          "Name":         { title:  [{ text: { content: `LOG-${date || new Date().toISOString().substring(0,10)}` } }] },
-          "Card":         { relation: [{ id: cardId }] },
-          "Date":         { date:   { start: date || new Date().toISOString() } },
-          "Rating":       { select: { name: String(rating) } },
-          "New Interval": { number: newInterval },
-          "New EF":       { number: parseFloat(parseFloat(newEf).toFixed(3)) },
+          "Name":        { title:    [{ text: { content: `LOG-${todayStr}` } }] },
+          [logCard]:     { relation: [{ id: cardId }] },
+          [logDate]:     { date:     { start: todayStr } },
+          [logRating]:   { select:   { name: String(rating) } },
+          [logInterval]: { number:   newInterval },
+          [logEf]:       { number:   parseFloat(parseFloat(newEf).toFixed(3)) },
         };
 
         await notionCreate(token, logDb, properties);
@@ -155,21 +164,31 @@ export default async function handler(req, res) {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function notionQuery(token, dbId, filter, sorts) {
-  const body = { page_size: 100 };
-  if (filter) body.filter = filter;
-  if (sorts)  body.sorts  = sorts;
+  let allResults = [];
+  let startCursor = undefined;
 
-  const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Notion-Version": "2022-06-28",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Notion query ${res.status}: ${await res.text()}`);
-  return res.json();
+  do {
+    const body = { page_size: 100 };
+    if (filter)      body.filter       = filter;
+    if (sorts)       body.sorts        = sorts;
+    if (startCursor) body.start_cursor = startCursor;
+
+    const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Notion query ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    allResults = allResults.concat(data.results || []);
+    startCursor = data.has_more ? data.next_cursor : undefined;
+  } while (startCursor);
+
+  return { results: allResults };
 }
 
 async function notionPatch(token, pageId, properties) {

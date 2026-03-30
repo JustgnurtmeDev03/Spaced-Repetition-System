@@ -187,6 +187,10 @@
           opacity: 0.3;
         }
       }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
 
       /* ══════════════════════════════════════════
    SCREEN 1 — SETUP
@@ -940,6 +944,26 @@
           </div>
           <button
             class="btn-icon"
+            onclick="refreshData()"
+            id="refresh-btn"
+            title="Làm mới dữ liệu từ Notion"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M13.5 2.5A6.5 6.5 0 1 1 2.5 8" />
+              <path d="M2 2.5h3v3" />
+            </svg>
+          </button>
+          <button
+            class="btn-icon"
             onclick="openCfg()"
             title="Cài đặt kết nối Notion"
           >
@@ -993,41 +1017,10 @@
         <div class="setup-card">
           <div class="setup-card-title">Chọn bộ thẻ</div>
           <div class="deck-grid" id="deck-grid">
-            <div
-              class="deck-btn sel"
-              data-deck="all"
-              onclick="selectDeck(this)"
-            >
+            <!-- Rendered dynamically from Notion data -->
+            <div class="deck-btn sel" data-deck="all" onclick="selectDeck(this)">
               <div class="deck-name">Tất cả</div>
-              <div class="deck-count" id="cnt-all">— thẻ đến hạn</div>
-            </div>
-            <div class="deck-btn" data-deck="BA-SQL" onclick="selectDeck(this)">
-              <div class="deck-name">BA · SQL</div>
-              <div class="deck-count" id="cnt-BA-SQL">— thẻ</div>
-            </div>
-            <div class="deck-btn" data-deck="IELTS" onclick="selectDeck(this)">
-              <div class="deck-name">IELTS</div>
-              <div class="deck-count" id="cnt-IELTS">— thẻ</div>
-            </div>
-            <div
-              class="deck-btn"
-              data-deck="Fintech"
-              onclick="selectDeck(this)"
-            >
-              <div class="deck-name">Fintech</div>
-              <div class="deck-count" id="cnt-Fintech">— thẻ</div>
-            </div>
-            <div
-              class="deck-btn"
-              data-deck="Self-study"
-              onclick="selectDeck(this)"
-            >
-              <div class="deck-name">Self-study</div>
-              <div class="deck-count" id="cnt-Self-study">— thẻ</div>
-            </div>
-            <div class="deck-btn" data-deck="Agile" onclick="selectDeck(this)">
-              <div class="deck-name">Agile</div>
-              <div class="deck-count" id="cnt-Agile">— thẻ</div>
+              <div class="deck-count">— thẻ đến hạn</div>
             </div>
           </div>
           <div class="slider-row">
@@ -1770,30 +1763,40 @@
       function updateSetupStats() {
         const due = S.cards.length;
         const newC = S.cards.filter((c) => c.status === "New").length;
-        const total = due; // in real mode, could be all cards
         const mastered = S.cards.filter((c) => c.status === "Mastered").length;
         document.getElementById("st-due").textContent = due;
         document.getElementById("st-new").textContent = newC;
-        document.getElementById("st-total").textContent = total;
+        document.getElementById("st-total").textContent = due;
         document.getElementById("st-mastered").textContent = mastered;
+        renderDecks(S.cards);
+      }
 
-        // Deck counts
-        const deckIds = [
-          "all",
-          "BA-SQL",
-          "IELTS",
-          "Fintech",
-          "Self-study",
-          "Agile",
-        ];
-        deckIds.forEach((d) => {
-          const el = document.getElementById("cnt-" + d);
-          if (!el) return;
-          const count =
-            d === "all"
-              ? S.cards.length
-              : S.cards.filter((c) => c.deck === d).length;
-          el.textContent = `${count} thẻ đến hạn`;
+      function renderDecks(cards) {
+        const deckNames = [
+          ...new Set(cards.map((c) => c.deck).filter(Boolean)),
+        ].sort();
+
+        const grid = document.getElementById("deck-grid");
+        grid.innerHTML = "";
+
+        // "Tất cả" button
+        const allBtn = document.createElement("div");
+        allBtn.className =
+          "deck-btn" + (S.selectedDeck === "all" ? " sel" : "");
+        allBtn.dataset.deck = "all";
+        allBtn.onclick = function () { selectDeck(this); };
+        allBtn.innerHTML = `<div class="deck-name">Tất cả</div><div class="deck-count">${cards.length} thẻ đến hạn</div>`;
+        grid.appendChild(allBtn);
+
+        deckNames.forEach((d) => {
+          const count = cards.filter((c) => c.deck === d).length;
+          const btn = document.createElement("div");
+          btn.className =
+            "deck-btn" + (S.selectedDeck === d ? " sel" : "");
+          btn.dataset.deck = d;
+          btn.onclick = function () { selectDeck(this); };
+          btn.innerHTML = `<div class="deck-name">${d}</div><div class="deck-count">${count} thẻ đến hạn</div>`;
+          grid.appendChild(btn);
         });
       }
 
@@ -1963,43 +1966,30 @@
       // NOTION SYNC
       // ═══════════════════════════════════════════════
       async function syncCard(pageId, result) {
-        if (!S.cfg.token || !S.cfg.cardDb) return;
-        const p = PROP();
+        if (!S.cfg.token && !S.cfg.cardDb) return;
         try {
-          const props = {
-            [p.ef]: { number: parseFloat(result.newEf.toFixed(3)) },
-            [p.interval]: { number: result.newInterval },
-            [p.reps]: { number: result.newReps },
-            [p.next]: { date: { start: result.nextDate } },
-            [p.status]: { status: { name: result.newStatus } },
-          };
+          // 1. Update SM-2 fields on the card via Vercel proxy
           await fetch("/api/srs", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "review", pageId, ...result }),
           });
 
-          // Log entry
-          if (S.cfg.logDb) {
-            const today = new Date();
-            const logCard = S.results.find((r) => r.card.id === pageId);
-            await notionCreate(S.cfg.logDb, {
-              Name: {
-                title: [
-                  {
-                    text: {
-                      content: `LOG-${today.toISOString().substring(0, 10)}`,
-                    },
-                  },
-                ],
-              },
-              Card: { relation: [{ id: pageId }] },
-              Date: { date: { start: today.toISOString() } },
-              Rating: { select: { name: String(logCard?.q ?? 0) } },
-              "New Interval": { number: result.newInterval },
-              "New EF": { number: parseFloat(result.newEf.toFixed(3)) },
-            });
-          }
+          // 2. Write a Review Log entry via Vercel proxy (avoids CORS)
+          const logCard = S.results.find((r) => r.card.id === pageId);
+          const today = new Date().toISOString().substring(0, 10);
+          await fetch("/api/srs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "log",
+              cardId: pageId,
+              date: today,
+              rating: logCard?.q ?? 0,
+              newInterval: result.newInterval,
+              newEf: result.newEf,
+            }),
+          });
         } catch (err) {
           console.warn("Sync error:", err.message);
         }
@@ -2087,6 +2077,19 @@
       function goSetup() {
         showScreen("screen-setup");
         if (!S.isDemo && S.cfg.token) fetchCards();
+      }
+
+      async function refreshData() {
+        if (S.isDemo) {
+          toast("Đang dùng Demo mode — nhấn ⚙️ để kết nối Notion");
+          return;
+        }
+        const btn = document.getElementById("refresh-btn");
+        btn.style.animation = "spin 0.8s linear infinite";
+        S.selectedDeck = "all";
+        await fetchCards();
+        btn.style.animation = "";
+        toast("Đã làm mới dữ liệu từ Notion ✓");
       }
       function exitSession() {
         if (confirm("Thoát session? Tiến độ sẽ không được lưu.")) goSetup();
