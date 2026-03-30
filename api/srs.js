@@ -156,6 +156,7 @@ export default async function handler(req, res) {
           cardId,
           cardFront,
           cardDeck,
+          taskId,
           date,
           rating,
           newInterval,
@@ -185,13 +186,23 @@ export default async function handler(req, res) {
 
         // Thêm các field optional
         if (cardId) props[LOG.card] = { relation: [{ id: cardId }] };
+        if (taskId) props[LOG.task] = { relation: [{ id: taskId }] };
         if (cardDeck) props[LOG.deck] = { select: { name: cardDeck } };
         props[LOG.result] = {
           select: { name: ratingNum >= 3 ? "Pass" : "Fail" },
         };
 
-        await notionCreate(token, logDb, props);
-        return res.status(200).json({ ok: true });
+        try {
+          await notionCreate(token, logDb, props);
+          return res.status(200).json({ ok: true });
+        } catch (e) {
+          console.error("Log creation error:", e.message);
+          return res.status(500).json({
+            error: "Log thất bại",
+            detail: e.message,
+            hint: "Kiểm tra property names trong Notion DB có khớp với config không",
+          });
+        }
       }
 
       // ── create: tạo 1 thẻ mới ──────────────────
@@ -412,6 +423,10 @@ function getRuntimeConfig(req) {
     card: header(
       "x-srs-log-prop-card",
       process.env.SRS_LOG_PROP_CARD || "Card"
+    ),
+    task: header(
+      "x-srs-log-prop-task",
+      process.env.SRS_LOG_PROP_TASK || "Task"
     ),
     date: header(
       "x-srs-log-prop-date",
