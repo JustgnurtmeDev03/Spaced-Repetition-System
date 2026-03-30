@@ -284,7 +284,7 @@ function getRuntimeConfig(req) {
   const LOG = {
     title: header(
       "x-srs-log-prop-title",
-      process.env.SRS_LOG_PROP_TITLE || "Name"
+      process.env.SRS_LOG_PROP_TITLE || "ID"
     ),
     card: header(
       "x-srs-log-prop-card",
