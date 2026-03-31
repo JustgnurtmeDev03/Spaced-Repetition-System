@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SRS Review Session</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a1917'/%3E%3Crect x='4' y='11' width='17' height='12' rx='3' fill='%23ffffff' opacity='0.25'/%3E%3Crect x='9' y='7' width='18' height='13' rx='3' fill='%231D9E75'/%3E%3Cline x1='13' y1='12' x2='23' y2='12' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3Cline x1='13' y1='15.5' x2='20' y2='15.5' stroke='white' stroke-width='1.8' stroke-linecap='round' opacity='0.65'/%3E%3C/svg%3E"
+    />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap");
 
@@ -617,6 +622,113 @@
         to {
           transform: rotate(360deg);
         }
+      }
+
+      /* ── MANAGE TAB ── */
+      .manage-search {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 1rem;
+        align-items: center;
+      }
+      .manage-search .form-input {
+        flex: 1;
+      }
+      .card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .card-item {
+        background: var(--surface);
+        border: 0.5px solid var(--bd);
+        border-radius: var(--r);
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .card-item-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .card-item-front {
+        font-weight: 500;
+        font-size: 13px;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card-item-back {
+        font-size: 11px;
+        color: var(--text2);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card-item-meta {
+        display: flex;
+        gap: 6px;
+        margin-top: 5px;
+        flex-wrap: wrap;
+      }
+      .card-item-actions {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .manage-deck-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 1rem 0 0.5rem;
+      }
+      .manage-deck-title {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .manage-deck-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      /* Edit modal */
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .modal.show {
+        display: flex;
+      }
+      .modal-panel {
+        background: var(--surface);
+        border: 0.5px solid var(--bd2);
+        border-radius: var(--rl);
+        padding: 1.5rem;
+        width: 100%;
+        max-width: 520px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .modal-title {
+        font-family: var(--card-font);
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
 
       /* ══════════════════════════════════════════
@@ -1311,6 +1423,101 @@
         color: var(--amber-d);
         border: 0.5px solid rgba(239, 159, 39, 0.3);
       }
+
+      /* ── DECK COLORS ── */
+      .deck-btn[data-color="0"] {
+        border-color: #7f77dd;
+        background: #eeedfe;
+      }
+      .deck-btn[data-color="0"].sel {
+        border-color: #7f77dd;
+        background: #dddcfd;
+      }
+      .deck-btn[data-color="0"] .deck-name {
+        color: #3c3489;
+      }
+      .deck-btn[data-color="1"] {
+        border-color: #ef9f27;
+        background: #faeeda;
+      }
+      .deck-btn[data-color="1"].sel {
+        border-color: #ef9f27;
+        background: #f5dba8;
+      }
+      .deck-btn[data-color="1"] .deck-name {
+        color: #633806;
+      }
+      .deck-btn[data-color="2"] {
+        border-color: #e24b4a;
+        background: #fcebeb;
+      }
+      .deck-btn[data-color="2"].sel {
+        border-color: #e24b4a;
+        background: #f9d5d5;
+      }
+      .deck-btn[data-color="2"] .deck-name {
+        color: #791f1f;
+      }
+      .deck-btn[data-color="3"] {
+        border-color: #378add;
+        background: #e6f1fb;
+      }
+      .deck-btn[data-color="3"].sel {
+        border-color: #378add;
+        background: #c2daf7;
+      }
+      .deck-btn[data-color="3"] .deck-name {
+        color: #0c447c;
+      }
+      .deck-btn[data-color="4"] {
+        border-color: #1d9e75;
+        background: #e1f5ee;
+      }
+      .deck-btn[data-color="4"].sel {
+        border-color: #1d9e75;
+        background: #b6e8d6;
+      }
+      .deck-btn[data-color="4"] .deck-name {
+        color: #085041;
+      }
+      .deck-btn[data-color="5"] {
+        border-color: #c97bbd;
+        background: #f7eaf5;
+      }
+      .deck-btn[data-color="5"].sel {
+        border-color: #c97bbd;
+        background: #ecd0e8;
+      }
+      .deck-btn[data-color="5"] .deck-name {
+        color: #6b2460;
+      }
+      .deck-btn[data-color="6"] {
+        border-color: #e07d3c;
+        background: #faebd7;
+      }
+      .deck-btn[data-color="6"].sel {
+        border-color: #e07d3c;
+        background: #f5d2ae;
+      }
+      .deck-btn[data-color="6"] .deck-name {
+        color: #7a3510;
+      }
+      .deck-btn[data-color="7"] {
+        border-color: #5bb8b0;
+        background: #e0f5f3;
+      }
+      .deck-btn[data-color="7"].sel {
+        border-color: #5bb8b0;
+        background: #b3e5e1;
+      }
+      .deck-btn[data-color="7"] .deck-name {
+        color: #1a5e59;
+      }
+      /* Override .sel khi có data-color để không bị màu xanh lá mặc định */
+      .deck-btn.sel[data-color] .deck-count {
+        color: inherit;
+        opacity: 0.75;
+      }
     </style>
   </head>
   <body>
@@ -1380,6 +1587,9 @@
           <button class="tab-btn" onclick="switchTab('create',this)">
             Tạo thẻ
           </button>
+          <button class="tab-btn" onclick="switchTab('manage',this)">
+            Quản lý
+          </button>
           <button class="tab-btn" onclick="switchTab('history',this)">
             Lịch sử
           </button>
@@ -1426,6 +1636,41 @@
               />
               <div class="slider-val" id="limit-val">20</div>
             </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-top: 1rem;
+              margin-bottom: 0;
+            "
+          >
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                font-size: 12px;
+                color: var(--text2);
+              "
+            >
+              <input
+                type="checkbox"
+                id="free-study-toggle"
+                style="accent-color: var(--green); width: 14px; height: 14px"
+                onchange="onFreeStudyToggle(this)"
+              />
+              Học tự do — bao gồm thẻ chưa đến hạn
+            </label>
+            <span
+              id="free-study-hint"
+              style="font-size: 11px; color: var(--text3); display: none"
+            >
+              (tải tất cả thẻ…)
+            </span>
           </div>
 
           <div class="start-row">
@@ -1699,6 +1944,130 @@
               </svg>
               <p>Nhấn tab này để tải lịch sử review từ Notion</p>
             </div>
+          </div>
+        </div>
+
+        <!-- ── TAB: MANAGE ── -->
+        <div class="tab-content" id="tab-manage">
+          <div class="manage-search">
+            <input
+              class="form-input"
+              type="text"
+              id="manage-search"
+              placeholder="Tìm thẻ theo nội dung, deck, tags…"
+              oninput="renderManageList()"
+            />
+            <button class="btn btn-sm" onclick="renderManageList()">Tìm</button>
+          </div>
+          <div id="manage-list"></div>
+        </div>
+
+        <!-- Edit Card Modal -->
+        <div class="modal" id="edit-modal" onclick="closeEditModal(event)">
+          <div class="modal-panel">
+            <div class="modal-title">
+              Chỉnh sửa thẻ
+              <button class="btn-icon" onclick="closeEditModal()">
+                <svg
+                  viewBox="0 0 13 13"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                >
+                  <path d="M1 1l11 11M12 1L1 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mặt trước</label>
+              <textarea
+                class="form-textarea"
+                id="edit-front"
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mặt sau</label>
+              <textarea
+                class="form-textarea"
+                id="edit-back"
+                rows="4"
+              ></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Deck</label>
+                <input
+                  class="form-input"
+                  id="edit-deck"
+                  list="deck-options"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tags (phân cách bằng dấu phẩy)</label>
+                <input class="form-input" id="edit-tags" />
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 1rem">
+              <button
+                class="btn btn-primary"
+                style="flex: 1"
+                onclick="saveEditCard()"
+              >
+                Lưu thay đổi
+              </button>
+              <button class="btn" onclick="closeEditModal()">Hủy</button>
+            </div>
+            <div
+              class="alert"
+              id="edit-alert"
+              style="margin-top: 0.75rem"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Rename Deck Modal -->
+        <div class="modal" id="rename-modal" onclick="closeRenameModal(event)">
+          <div class="modal-panel" style="max-width: 380px">
+            <div class="modal-title">
+              Đổi tên bộ thẻ
+              <button class="btn-icon" onclick="closeRenameModal()">
+                <svg
+                  viewBox="0 0 13 13"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                >
+                  <path d="M1 1l11 11M12 1L1 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tên mới</label>
+              <input
+                class="form-input"
+                id="rename-deck-input"
+                placeholder="Nhập tên mới cho bộ thẻ…"
+              />
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 1rem">
+              <button
+                class="btn btn-primary"
+                style="flex: 1"
+                onclick="confirmRenameDeck()"
+              >
+                Đổi tên
+              </button>
+              <button class="btn" onclick="closeRenameModal()">Hủy</button>
+            </div>
+            <div
+              class="alert"
+              id="rename-alert"
+              style="margin-top: 0.75rem"
+            ></div>
           </div>
         </div>
       </div>
@@ -2043,6 +2412,7 @@
         btn.classList.add("active");
         document.getElementById("tab-" + name).classList.add("active");
         if (name === "history" && !S.logsLoaded) fetchLogs();
+        if (name === "manage") renderManageList();
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -2363,8 +2733,10 @@
         deckNames.forEach((d) => {
           const count = cards.filter((c) => c.deck === d).length;
           const btn = document.createElement("div");
+          const ci = deckColorIndex(d);
           btn.className = "deck-btn" + (S.selectedDeck === d ? " sel" : "");
           btn.dataset.deck = d;
+          btn.dataset.color = ci;
           btn.onclick = function () {
             selectDeck(this);
           };
@@ -2428,6 +2800,13 @@
         }
         const card = S.queue[i];
         S.current = card;
+        // Áp màu ngẫu nhiên cho mặt trước flashcard
+        const palette =
+          CARD_PALETTES[Math.floor(Math.random() * CARD_PALETTES.length)];
+        const frontFace = document.querySelector("#card-body .card-face.front");
+        frontFace.style.background = palette.bg;
+        frontFace.style.borderColor = palette.border;
+        frontFace.querySelector(".card-face-label").style.color = palette.label;
         S.isFlipped = false;
         document.getElementById("card-body").classList.remove("flipped");
         document.getElementById("rating-panel").classList.remove("visible");
@@ -2455,15 +2834,19 @@
       }
 
       function flipCard() {
-        if (S.isFlipped) return;
-        S.isFlipped = true;
-        document.getElementById("card-body").classList.add("flipped");
-        document.getElementById("flip-prompt").classList.add("hidden");
-        setTimeout(
-          () =>
-            document.getElementById("rating-panel").classList.add("visible"),
-          300
-        );
+        S.isFlipped = !S.isFlipped;
+        const cardBody = document.getElementById("card-body");
+        const flipPrompt = document.getElementById("flip-prompt");
+        const ratingPanel = document.getElementById("rating-panel");
+        if (S.isFlipped) {
+          cardBody.classList.add("flipped");
+          flipPrompt.classList.add("hidden");
+          setTimeout(() => ratingPanel.classList.add("visible"), 300);
+        } else {
+          cardBody.classList.remove("flipped");
+          flipPrompt.classList.remove("hidden");
+          ratingPanel.classList.remove("visible");
+        }
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -2514,7 +2897,7 @@
         S.results.push({ card, q, pass: result.pass, result });
         if (result.pass) S.passCount++;
         else S.failCount++;
-        if (!S.isDemo) await syncCard(card, q, result);
+        if (!S.isDemo) syncCard(card, q, result); // fire-and-forget, không chặn UI
         setTimeout(() => {
           document.getElementById("card-body").classList.remove("flipped");
           document.getElementById("rating-panel").classList.remove("visible");
@@ -2523,7 +2906,7 @@
             .forEach((b) => b.classList.remove("pressed"));
           S.idx++;
           showCard(S.idx);
-        }, 320);
+        }, 220);
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -2645,6 +3028,9 @@
         if (!S.isDemo)
           document.getElementById("sync-status-done").textContent =
             "✓ Dữ liệu đã được đồng bộ lên Notion";
+        // Auto-refresh cards & stats in background so Tab Ôn tập is ready
+        fetchCards(true);
+        fetchStats(true);
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -2693,6 +3079,7 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok)
             throw new Error(data.error || data.detail || "Tạo thẻ thất bại");
+          clearCreateForm();
           showAlert(
             "create-alert",
             "success",
@@ -2700,7 +3087,7 @@
               deck ? ` vào bộ ${deck}` : ""
             }`
           );
-          clearCreateForm();
+          toast(`✓ Tạo thẻ thành công!`);
           S.logsLoaded = false;
           await fetchCards(true);
         } catch (err) {
@@ -3212,6 +3599,379 @@
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
+      }
+
+      function deckColorIndex(name) {
+        let h = 0;
+        for (let i = 0; i < name.length; i++)
+          h = (Math.imul(31, h) + name.charCodeAt(i)) | 0;
+        return Math.abs(h) % 8;
+      }
+
+      const CARD_PALETTES = [
+        { bg: "#eeedfe", border: "#7f77dd", label: "#9b94e8" }, // lavender
+        { bg: "#e6f1fb", border: "#378add", label: "#6aaee8" }, // sky blue
+        { bg: "#faeeda", border: "#ef9f27", label: "#f0b555" }, // amber
+        { bg: "#fde8f0", border: "#d96e9a", label: "#e08fb2" }, // rose
+        { bg: "#e0f5f3", border: "#5bb8b0", label: "#7ecdc6" }, // teal
+        { bg: "#f7eaf5", border: "#c97bbd", label: "#d89dce" }, // mauve
+        { bg: "#e8f4e8", border: "#4caf82", label: "#71c49a" }, // sage
+        { bg: "#fff3e0", border: "#e07d3c", label: "#e89a62" }, // peach
+      ];
+
+      // ── Free Study Mode ──
+      async function onFreeStudyToggle(checkbox) {
+        if (S.isDemo) {
+          // Demo mode: đã có tất cả thẻ rồi, không cần fetch
+          toast(
+            checkbox.checked
+              ? "Demo: Đang xem tất cả thẻ mẫu"
+              : "Đã về chế độ thẻ đến hạn"
+          );
+          return;
+        }
+        const hint = document.getElementById("free-study-hint");
+        if (checkbox.checked) {
+          hint.style.display = "inline";
+          hint.textContent = "Đang tải tất cả thẻ…";
+          setStatus("loading", "Đang tải tất cả thẻ…");
+          try {
+            const res = await fetch(`/api/srs?action=all&_=${Date.now()}`, {
+              cache: "no-store",
+              headers: buildSrsHeaders(),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            S.cards = data.cards || [];
+            S.isFreeStudy = true;
+            setStatus("ok", `Học tự do — ${S.cards.length} thẻ`);
+            hint.textContent = `${S.cards.length} thẻ`;
+            updateSetupStats();
+          } catch (err) {
+            checkbox.checked = false;
+            hint.style.display = "none";
+            toast("Lỗi tải thẻ: " + err.message);
+          }
+        } else {
+          hint.style.display = "none";
+          S.isFreeStudy = false;
+          await fetchCards(true); // về lại chế độ due
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // MANAGE TAB
+      // ═══════════════════════════════════════════════════════════════════
+      let _editCardId = null;
+      let _renameDeckOld = null;
+
+      function renderManageList() {
+        const q = (
+          document.getElementById("manage-search")?.value || ""
+        ).toLowerCase();
+        const pool = S.cards.filter(
+          (c) =>
+            !q ||
+            c.front.toLowerCase().includes(q) ||
+            (c.back || "").toLowerCase().includes(q) ||
+            (c.deck || "").toLowerCase().includes(q) ||
+            (c.tags || []).some((t) => t.toLowerCase().includes(q))
+        );
+
+        // Group by deck
+        const deckMap = {};
+        pool.forEach((c) => {
+          const d = c.deck || "General";
+          if (!deckMap[d]) deckMap[d] = [];
+          deckMap[d].push(c);
+        });
+
+        if (!pool.length) {
+          document.getElementById(
+            "manage-list"
+          ).innerHTML = `<div class="empty-state"><p>Không tìm thấy thẻ nào</p></div>`;
+          return;
+        }
+
+        let html = "";
+        Object.entries(deckMap).forEach(([deck, cards]) => {
+          const ci = deckColorIndex(deck);
+          const colors = [
+            "#7f77dd",
+            "#ef9f27",
+            "#e24b4a",
+            "#378add",
+            "#1d9e75",
+            "#c97bbd",
+            "#e07d3c",
+            "#5bb8b0",
+          ];
+          const bgs = [
+            "#eeedfe",
+            "#faeeda",
+            "#fcebeb",
+            "#e6f1fb",
+            "#e1f5ee",
+            "#f7eaf5",
+            "#faebd7",
+            "#e0f5f3",
+          ];
+          html += `
+      <div class="manage-deck-header">
+        <span class="manage-deck-title" style="color:${colors[ci]}">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${
+            colors[ci]
+          };margin-right:6px;vertical-align:middle"></span>
+          ${escHtml(deck)} — ${cards.length} thẻ
+        </span>
+        <div class="manage-deck-actions">
+          <button class="btn btn-sm" onclick="openRenameDeck('${escHtml(
+            deck
+          )}')">✏️ Đổi tên</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteDeck('${escHtml(
+            deck
+          )}')">🗑 Xóa bộ</button>
+        </div>
+      </div>
+      <div class="card-list">`;
+          cards.forEach((c) => {
+            const tagBadges = (c.tags || [])
+              .map(
+                (t) =>
+                  `<span style="font-size:10px;padding:1px 6px;border-radius:999px;background:${
+                    bgs[ci]
+                  };color:${colors[ci]};border:0.5px solid ${
+                    colors[ci]
+                  }44">${escHtml(t)}</span>`
+              )
+              .join("");
+            html += `
+        <div class="card-item">
+          <div class="card-item-body">
+            <div class="card-item-front">${escHtml(c.front)}</div>
+            <div class="card-item-back">${escHtml(c.back || "—")}</div>
+            <div class="card-item-meta">${tagBadges}
+              <span style="font-size:10px;color:var(--text3)">EF ${c.ef?.toFixed(
+                1
+              )} · ${c.status || "New"}</span>
+            </div>
+          </div>
+          <div class="card-item-actions">
+            <button class="btn btn-sm" onclick="openEditCard('${
+              c.id
+            }')">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCard('${
+              c.id
+            }', '${escHtml(c.front).replace(/'/g, "\\'")}')">🗑</button>
+          </div>
+        </div>`;
+          });
+          html += `</div>`;
+        });
+
+        document.getElementById("manage-list").innerHTML = html;
+      }
+
+      // ── Edit Card ──
+      function openEditCard(id) {
+        const card = S.cards.find((c) => c.id === id);
+        if (!card) return;
+        _editCardId = id;
+        document.getElementById("edit-front").value = card.front || "";
+        document.getElementById("edit-back").value = card.back || "";
+        document.getElementById("edit-deck").value = card.deck || "";
+        document.getElementById("edit-tags").value = (card.tags || []).join(
+          ", "
+        );
+        document.getElementById("edit-alert").classList.remove("show");
+        document.getElementById("edit-modal").classList.add("show");
+      }
+      function closeEditModal(e) {
+        if (e && e.target !== document.getElementById("edit-modal")) return;
+        document.getElementById("edit-modal").classList.remove("show");
+      }
+
+      async function saveEditCard() {
+        if (S.isDemo) {
+          toast("Cần kết nối Notion thật");
+          return;
+        }
+        const front = document.getElementById("edit-front").value.trim();
+        const back = document.getElementById("edit-back").value.trim();
+        const deck = document.getElementById("edit-deck").value.trim();
+        const tags = document
+          .getElementById("edit-tags")
+          .value.split(",")
+          .map((t) => t.trim())
+          .filter(Boolean);
+        if (!front) {
+          showAlert("edit-alert", "error", "Mặt trước không được trống");
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/srs", {
+            method: "POST",
+            headers: buildSrsHeaders(),
+            body: JSON.stringify({
+              action: "editCard",
+              pageId: _editCardId,
+              front,
+              back,
+              deck,
+              tags,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok)
+            throw new Error(data.error || "Lỗi cập nhật");
+
+          // Update local state
+          const card = S.cards.find((c) => c.id === _editCardId);
+          if (card) {
+            card.front = front;
+            card.back = back;
+            card.deck = deck;
+            card.tags = tags;
+          }
+          toast("✓ Đã cập nhật thẻ");
+          document.getElementById("edit-modal").classList.remove("show");
+          renderManageList();
+          renderDecks(S.cards);
+        } catch (err) {
+          showAlert("edit-alert", "error", err.message);
+        }
+      }
+
+      // ── Delete Card ──
+      async function deleteCard(id, frontPreview) {
+        if (
+          !confirm(
+            `Xóa thẻ "${frontPreview.substring(
+              0,
+              60
+            )}"?\nThao tác này không thể hoàn tác.`
+          )
+        )
+          return;
+        if (S.isDemo) {
+          toast("Cần kết nối Notion thật");
+          return;
+        }
+        try {
+          const res = await fetch("/api/srs", {
+            method: "POST",
+            headers: buildSrsHeaders(),
+            body: JSON.stringify({ action: "deleteCard", pageId: id }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) throw new Error(data.error || "Lỗi xóa thẻ");
+          S.cards = S.cards.filter((c) => c.id !== id);
+          toast("✓ Đã xóa thẻ");
+          renderManageList();
+          renderDecks(S.cards);
+        } catch (err) {
+          toast("Lỗi: " + err.message);
+        }
+      }
+
+      // ── Rename Deck ──
+      function openRenameDeck(deckName) {
+        _renameDeckOld = deckName;
+        document.getElementById("rename-deck-input").value = deckName;
+        document.getElementById("rename-alert").classList.remove("show");
+        document.getElementById("rename-modal").classList.add("show");
+      }
+      function closeRenameModal(e) {
+        if (e && e.target !== document.getElementById("rename-modal")) return;
+        document.getElementById("rename-modal").classList.remove("show");
+      }
+
+      async function confirmRenameDeck() {
+        const newName = document
+          .getElementById("rename-deck-input")
+          .value.trim();
+        if (!newName || newName === _renameDeckOld) {
+          closeRenameModal();
+          return;
+        }
+        if (S.isDemo) {
+          toast("Cần kết nối Notion thật");
+          return;
+        }
+
+        const cardsInDeck = S.cards.filter((c) => c.deck === _renameDeckOld);
+        if (!cardsInDeck.length) {
+          closeRenameModal();
+          return;
+        }
+
+        showAlert(
+          "rename-alert",
+          "warning",
+          `Đang đổi tên ${cardsInDeck.length} thẻ…`
+        );
+        try {
+          const res = await fetch("/api/srs", {
+            method: "POST",
+            headers: buildSrsHeaders(),
+            body: JSON.stringify({
+              action: "renameDeck",
+              oldDeck: _renameDeckOld,
+              newDeck: newName,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) throw new Error(data.error || "Lỗi đổi tên");
+
+          // Update local state
+          cardsInDeck.forEach((c) => (c.deck = newName));
+          toast(`✓ Đã đổi "${_renameDeckOld}" → "${newName}"`);
+          document.getElementById("rename-modal").classList.remove("show");
+          renderManageList();
+          renderDecks(S.cards);
+          renderDeckSuggestions(
+            [...new Set(S.cards.map((c) => c.deck).filter(Boolean))].sort()
+          );
+        } catch (err) {
+          showAlert("rename-alert", "error", err.message);
+        }
+      }
+
+      // ── Delete Deck ──
+      async function deleteDeck(deckName) {
+        const cardsInDeck = S.cards.filter((c) => c.deck === deckName);
+        if (
+          !confirm(
+            `Xóa toàn bộ bộ thẻ "${deckName}" gồm ${cardsInDeck.length} thẻ?\n⚠️ Thao tác này KHÔNG THỂ hoàn tác!`
+          )
+        )
+          return;
+        if (S.isDemo) {
+          toast("Cần kết nối Notion thật");
+          return;
+        }
+
+        toast(`Đang xóa ${cardsInDeck.length} thẻ…`);
+        try {
+          const res = await fetch("/api/srs", {
+            method: "POST",
+            headers: buildSrsHeaders(),
+            body: JSON.stringify({ action: "deleteDeck", deck: deckName }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok)
+            throw new Error(data.error || "Lỗi xóa bộ thẻ");
+
+          S.cards = S.cards.filter((c) => c.deck !== deckName);
+          toast(`✓ Đã xóa bộ thẻ "${deckName}"`);
+          renderManageList();
+          renderDecks(S.cards);
+          updateSetupStats();
+        } catch (err) {
+          toast("Lỗi: " + err.message);
+        }
       }
     </script>
   </body>

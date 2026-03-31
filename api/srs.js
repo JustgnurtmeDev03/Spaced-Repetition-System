@@ -59,6 +59,22 @@ export default async function handler(req, res) {
         return res.status(200).json({ cards, count: cards.length });
       }
 
+      // ── all: tất cả thẻ không lọc đến hạn ────
+      if (action === "all") {
+        const data = await notionQuery(
+          token,
+          cardDb,
+          deck && deck !== "all"
+            ? { property: PROP.deck, select: { equals: deck } }
+            : null,
+          [{ property: PROP.next, direction: "ascending" }]
+        );
+        const cards = data.results
+          .map((p) => parseCard(p, PROP))
+          .filter((c) => c.front);
+        return res.status(200).json({ cards, count: cards.length });
+      }
+
       // ── stats: tổng quan ──────────────────────
       if (action === "stats") {
         const data = await notionQuery(token, cardDb, null, null);
@@ -109,7 +125,10 @@ export default async function handler(req, res) {
             rating: ratingNum,
             newInterval: pr[LOG.interval]?.number ?? null,
             newEf: pr[LOG.ef]?.number ?? null,
-            deck: pr[LOG.deck]?.select?.name || null,
+            deck:
+              pr[LOG.deck]?.select?.name ||
+              pr[LOG.deck]?.rich_text?.map((t) => t.plain_text).join("") ||
+              null,
             pass: ratingNum >= 3,
           };
         });
@@ -404,6 +423,97 @@ export default async function handler(req, res) {
             detail: e.message,
           });
         }
+      }
+
+      // ── editCard: cập nhật nội dung thẻ ────────
+      if (body.action === "editCard") {
+        const { pageId, front, back, deck, tags } = body;
+        if (!pageId) return res.status(400).json({ error: "Missing pageId" });
+        const props = {
+          [PROP.front]: {
+            title: [{ text: { content: (front || "").substring(0, 2000) } }],
+          },
+          [PROP.back]: {
+            rich_text: [{ text: { content: (back || "").substring(0, 2000) } }],
+          },
+        };
+        if (deck !== undefined)
+          props[PROP.deck] = deck
+            ? { select: { name: deck.trim() } }
+            : { select: null };
+        if (Array.isArray(tags))
+          props[PROP.tags] = { multi_select: tags.map((t) => ({ name: t })) };
+        await notionPatch(token, pageId, props);
+        return res.status(200).json({ ok: true });
+      }
+
+      // ── deleteCard: archive page ────────────────
+      if (body.action === "deleteCard") {
+        const { pageId } = body;
+        if (!pageId) return res.status(400).json({ error: "Missing pageId" });
+        const res2 = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ archived: true }),
+        });
+        if (!res2.ok) {
+          const t = await res2.text();
+          throw new Error(
+            `Notion PATCH ${res2.status}: ${t.substring(0, 200)}`
+          );
+        }
+        return res.status(200).json({ ok: true });
+      }
+
+      // ── renameDeck: đổi tên deck hàng loạt ─────
+      if (body.action === "renameDeck") {
+        const { oldDeck, newDeck } = body;
+        if (!oldDeck || !newDeck)
+          return res.status(400).json({ error: "Missing oldDeck/newDeck" });
+        const data = await notionQuery(
+          token,
+          cardDb,
+          { property: PROP.deck, select: { equals: oldDeck } },
+          null
+        );
+        await Promise.all(
+          data.results.map((p) =>
+            notionPatch(token, p.id, {
+              [PROP.deck]: { select: { name: newDeck } },
+            })
+          )
+        );
+        return res.status(200).json({ ok: true, count: data.results.length });
+      }
+
+      // ── deleteDeck: archive all cards in deck ───
+      if (body.action === "deleteDeck") {
+        const { deck } = body;
+        if (!deck) return res.status(400).json({ error: "Missing deck" });
+        const data = await notionQuery(
+          token,
+          cardDb,
+          { property: PROP.deck, select: { equals: deck } },
+          null
+        );
+        await Promise.all(
+          data.results.map((p) =>
+            fetch(`https://api.notion.com/v1/pages/${p.id}`, {
+              method: "PATCH",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Notion-Version": "2022-06-28",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ archived: true }),
+            })
+          )
+        );
+        return res.status(200).json({ ok: true, count: data.results.length });
       }
 
       return res.status(400).json({ error: "Unknown action: " + body.action });
