@@ -56,6 +56,26 @@ export default async function handler(req, res) {
         const cards = data.results
           .map((p) => parseCard(p, PROP))
           .filter((c) => c.front);
+
+        const needResolve = cards.filter((c) => !c.deck && c.deckRelId);
+        if (needResolve.length > 0) {
+          const uniqueRelIds = [
+            ...new Set(needResolve.map((c) => c.deckRelId)),
+          ];
+          const deckNameMap = {};
+          await Promise.all(
+            uniqueRelIds.map(async (id) => {
+              const name = await resolvePageTitle(token, id);
+              if (name) deckNameMap[id] = name;
+            })
+          );
+          cards.forEach((c) => {
+            if (c.deckRelId && deckNameMap[c.deckRelId]) {
+              c.deck = deckNameMap[c.deckRelId];
+            }
+            if (!c.deck) c.deck = "General"; // fallback
+          });
+        }
         return res.status(200).json({ cards, count: cards.length });
       }
 
@@ -72,6 +92,26 @@ export default async function handler(req, res) {
         const cards = data.results
           .map((p) => parseCard(p, PROP))
           .filter((c) => c.front);
+
+        const needResolve = cards.filter((c) => !c.deck && c.deckRelId);
+        if (needResolve.length > 0) {
+          const uniqueRelIds = [
+            ...new Set(needResolve.map((c) => c.deckRelId)),
+          ];
+          const deckNameMap = {};
+          await Promise.all(
+            uniqueRelIds.map(async (id) => {
+              const name = await resolvePageTitle(token, id);
+              if (name) deckNameMap[id] = name;
+            })
+          );
+          cards.forEach((c) => {
+            if (c.deckRelId && deckNameMap[c.deckRelId]) {
+              c.deck = deckNameMap[c.deckRelId];
+            }
+            if (!c.deck) c.deck = "General"; // fallback
+          });
+        }
         return res.status(200).json({ cards, count: cards.length });
       }
 
@@ -114,27 +154,51 @@ export default async function handler(req, res) {
         const data = await notionQuery(token, logDb, null, [
           { property: LOG.date, direction: "descending" },
         ]);
+        // Trong action logs, sửa phần .map() tạo logs:
         const logs = data.results.slice(0, n).map((page) => {
           const pr = page.properties;
           const ratingStr = pr[LOG.rating]?.select?.name || "0";
           const ratingNum = parseInt(ratingStr) || 0;
+
+          // Đọc deck — hỗ trợ select, rich_text, và relation
+          const deckRelIds = pr[LOG.deck]?.relation?.map((r) => r.id) || [];
+          const deckDirect =
+            pr[LOG.deck]?.select?.name ||
+            (pr[LOG.deck]?.rich_text || []).map((t) => t.plain_text).join("") ||
+            null;
+
           return {
             id: page.id,
             cardFront: getText(pr[LOG.title]),
+            cardRelId: pr[LOG.card]?.relation?.[0]?.id || null, // ← MỚI: để client resolve deck
+            deckRelIds: deckRelIds, // ← MỚI: ID trang deck nếu là relation
             date: pr[LOG.date]?.date?.start || null,
             rating: ratingNum,
             newInterval: pr[LOG.interval]?.number ?? null,
             newEf: pr[LOG.ef]?.number ?? null,
-            deck:
-              pr[LOG.deck]?.select?.name ||
-              (pr[LOG.deck]?.rich_text || [])
-                .map((t) => t.plain_text)
-                .join("") ||
-              pr[LOG.deck]?.title?.map((t) => t.plain_text).join("") ||
-              null,
+            deck: deckDirect, // sẽ được bổ sung ở client nếu null
             pass: ratingNum >= 3,
           };
         });
+
+        // Resolve deck relation IDs → tên (nếu có)
+        const allDeckRelIds = [
+          ...new Set(logs.flatMap((l) => l.deckRelIds).filter(Boolean)),
+        ];
+        if (allDeckRelIds.length > 0) {
+          const deckNameMap = {};
+          await Promise.all(
+            allDeckRelIds.map(async (id) => {
+              const name = await resolvePageTitle(token, id);
+              deckNameMap[id] = name; // null nếu trang đã bị xóa
+            })
+          );
+          logs.forEach((l) => {
+            if (!l.deck && l.deckRelIds.length > 0) {
+              l.deck = deckNameMap[l.deckRelIds[0]] || null;
+            }
+          });
+        }
         return res.status(200).json({ logs, total: data.results.length });
       }
 
@@ -209,7 +273,14 @@ export default async function handler(req, res) {
         // Thêm các field optional
         if (cardId) props[LOG.card] = { relation: [{ id: cardId }] };
         if (taskId) props[LOG.task] = { relation: [{ id: taskId }] };
-        if (cardDeck) props[LOG.deck] = { select: { name: cardDeck } };
+        const { cardDeckRelId } = body; // ← nhận thêm param từ frontend
+        if (cardDeckRelId) {
+          // Deck là relation — ghi đúng kiểu relation
+          props[LOG.deck] = { relation: [{ id: cardDeckRelId }] };
+        } else if (cardDeck) {
+          // Fallback: deck là select (thiết kế cũ)
+          props[LOG.deck] = { select: { name: cardDeck } };
+        }
         props[LOG.result] = {
           select: { name: ratingNum >= 3 ? "Pass" : "Fail" },
         };
@@ -495,28 +566,107 @@ export default async function handler(req, res) {
 
       // ── deleteDeck: archive all cards in deck ───
       if (body.action === "deleteDeck") {
-        const { deck } = body;
-        if (!deck) return res.status(400).json({ error: "Missing deck" });
-        const data = await notionQuery(
-          token,
-          cardDb,
-          { property: PROP.deck, select: { equals: deck } },
-          null
-        );
-        await Promise.all(
-          data.results.map((p) =>
-            fetch(`https://api.notion.com/v1/pages/${p.id}`, {
-              method: "PATCH",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Notion-Version": "2022-06-28",
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ archived: true }),
+        const { deck: deckName, deckPageId } = body;
+        if (!deckName?.trim())
+          return res.status(400).json({ error: "Thiếu tên bộ thẻ" });
+
+        try {
+          // 1. Lấy tất cả thẻ trong DB và filter theo deck name (đã resolve)
+          const allData = await notionQuery(token, cardDb, null, null);
+          const allCards = allData.results.map((p) => parseCard(p, PROP));
+
+          // Resolve deck names nếu cần
+          const needResolve = allCards.filter((c) => !c.deck && c.deckRelId);
+          const uniqueRelIds = [
+            ...new Set(needResolve.map((c) => c.deckRelId)),
+          ];
+          const deckNameMap = {};
+          await Promise.all(
+            uniqueRelIds.map(async (id) => {
+              const name = await resolvePageTitle(token, id);
+              if (name) deckNameMap[id] = name;
             })
-          )
-        );
-        return res.status(200).json({ ok: true, count: data.results.length });
+          );
+          allCards.forEach((c) => {
+            if (!c.deck && c.deckRelId)
+              c.deck = deckNameMap[c.deckRelId] || null;
+          });
+
+          const cardsToDelete = allCards.filter(
+            (c) => c.deck === deckName.trim()
+          );
+          const cardIds = cardsToDelete.map((c) => c.id);
+
+          if (cardIds.length === 0) {
+            return res
+              .status(200)
+              .json({ ok: true, deletedCards: 0, deletedLogs: 0 });
+          }
+
+          // 2. Xóa thẻ (archive)
+          await Promise.all(
+            cardIds.map((id) =>
+              fetch(`https://api.notion.com/v1/pages/${id}`, {
+                method: "PATCH",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Notion-Version": "2022-06-28",
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ archived: true }),
+              })
+            )
+          );
+
+          // 3. Xóa log liên quan đến các thẻ vừa bị xóa (nếu có logDb)
+          let deletedLogs = 0;
+          if (logDb && cardIds.length > 0) {
+            // Tìm logs có Card relation là một trong các cardIds
+            const logQueries = cardIds.map((cardId) =>
+              notionQuery(
+                token,
+                logDb,
+                {
+                  property: LOG.card,
+                  relation: { contains: cardId },
+                },
+                null
+              )
+            );
+            const logResults = await Promise.all(logQueries);
+            const allLogs = logResults.flatMap((r) => r.results);
+            // Dedup (một log có thể match nhiều query)
+            const uniqueLogs = [
+              ...new Map(allLogs.map((l) => [l.id, l])).values(),
+            ];
+
+            await Promise.all(
+              uniqueLogs.map((l) =>
+                fetch(`https://api.notion.com/v1/pages/${l.id}`, {
+                  method: "PATCH",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Notion-Version": "2022-06-28",
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ archived: true }),
+                })
+              )
+            );
+            deletedLogs = uniqueLogs.length;
+          }
+
+          return res.status(200).json({
+            ok: true,
+            deletedCards: cardIds.length,
+            deletedLogs,
+            message: `Đã xóa ${cardIds.length} thẻ và ${deletedLogs} bản ghi lịch sử của bộ "${deckName}"`,
+          });
+        } catch (e) {
+          return res
+            .status(500)
+            .json({ error: "Xóa bộ thẻ thất bại", detail: e.message });
+        }
       }
 
       return res.status(400).json({ error: "Unknown action: " + body.action });
@@ -683,11 +833,15 @@ async function notionCreate(token, dbId, properties) {
 
 function parseCard(page, PROP) {
   const pr = page.properties || {};
+  // Hỗ trợ cả "select" (tên trực tiếp) và "relation" (ID cần resolve sau)
+  const deckSelect = pr[PROP.deck]?.select?.name || null;
+  const deckRelId = pr[PROP.deck]?.relation?.[0]?.id || null;
   return {
     id: page.id,
     front: getText(pr[PROP.front]),
     back: getText(pr[PROP.back]),
-    deck: pr[PROP.deck]?.select?.name || "General",
+    deck: deckSelect, // null nếu là relation, sẽ được điền sau
+    deckRelId: deckRelId, // ID trang Deck, dùng để ghi log và xóa
     tags: pr[PROP.tags]?.multi_select?.map((s) => s.name) || [],
     ef: pr[PROP.ef]?.number ?? 2.5,
     interval: pr[PROP.interval]?.number ?? 1,
@@ -706,4 +860,26 @@ function getText(prop) {
 
 function getStatus(prop) {
   return prop?.status?.name || prop?.select?.name || "";
+}
+
+// ── resolvePageTitle: lấy tên của một Notion page theo ID ──
+async function resolvePageTitle(token, pageId) {
+  try {
+    const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Notion-Version": "2022-06-28",
+      },
+    });
+    if (!res.ok) return null;
+    const page = await res.json();
+    if (page.archived) return null;
+    // Tìm property kiểu title
+    const titleProp = Object.values(page.properties || {}).find(
+      (p) => p.type === "title"
+    );
+    return titleProp?.title?.map((t) => t.plain_text).join("") || null;
+  } catch (e) {
+    return null;
+  }
 }

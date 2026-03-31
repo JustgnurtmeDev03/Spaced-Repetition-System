@@ -2062,7 +2062,7 @@
                     onclick="toggleLogDedupe(this)"
                     title="Chỉ hiển thị lần review cuối cùng của mỗi thẻ trong ngày"
                   >
-                    🗂 Gộp trùng
+                    🎭 Gộp trùng
                   </button>
                 </div>
                 <button class="btn btn-sm" onclick="fetchLogs(true)">
@@ -3110,6 +3110,17 @@
                 newInterval: result.newInterval,
                 newEf: result.newEf,
               }),
+              body: JSON.stringify({
+                action: "log",
+                cardId: card.id,
+                cardFront: card.front,
+                cardDeck: card.deck,
+                cardDeckRelId: card.deckRelId || null, // ← thêm dòng này
+                date: localDate(new Date()),
+                rating: q,
+                newInterval: result.newInterval,
+                newEf: result.newEf,
+              }),
             });
             if (!r2.ok) {
               const e = await r2.json().catch(() => ({}));
@@ -3440,6 +3451,21 @@
       // ═══════════════════════════════════════════════════════════════════
       // HISTORY / REVIEW LOG (Tab 3)
       // ═══════════════════════════════════════════════════════════════════
+
+      // Resolve deck từ data thẻ đã load (tránh API call thừa)
+      function enrichLogsWithDeck(logs) {
+        // Build map: cardId → deck name từ tất cả thẻ đã tải
+        const cardMap = {};
+        [...(S.allCards || []), ...(S.cards || [])].forEach((c) => {
+          if (c.id && c.deck) cardMap[c.id] = c.deck;
+        });
+        logs.forEach((log) => {
+          if (!log.deck && log.cardRelId && cardMap[log.cardRelId]) {
+            log.deck = cardMap[log.cardRelId];
+          }
+        });
+      }
+
       async function fetchLogs(forceRefresh = false) {
         if (S.isDemo) {
           renderLogsMock();
@@ -3468,6 +3494,7 @@
             return;
           }
           S.logs = data.logs || [];
+          enrichLogsWithDeck(S.logs);
           S.logsLoaded = true;
           populateLogDeckFilter(S.logs);
           applyLogFilter();
@@ -3710,15 +3737,17 @@
 
       function goHistory() {
         showScreen("screen-setup");
-        // Switch to history tab
-        const tabs = document.querySelectorAll(".tab-btn");
-        tabs.forEach((b) => b.classList.remove("active"));
-        tabs[2].classList.add("active");
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        // Tìm đúng tab "Lịch sử" theo onclick, không dùng index cứng
+        const histBtn = document.querySelector('.tab-btn[onclick*="history"]');
+        if (histBtn) histBtn.classList.add("active");
         document
           .querySelectorAll(".tab-content")
           .forEach((c) => c.classList.remove("active"));
         document.getElementById("tab-history").classList.add("active");
-        fetchLogs();
+        fetchLogs(true);
       }
 
       function exitSession() {
@@ -4047,7 +4076,9 @@
 
       // ── Edit Card ──
       function openEditCard(id) {
-        const card = S.cards.find((c) => c.id === id);
+        const card = (S.allCards?.length ? S.allCards : S.cards).find(
+          (c) => c.id === id
+        );
         if (!card) return;
         _editCardId = id;
         document.getElementById("edit-front").value = card.front || "";
@@ -4239,7 +4270,11 @@
           const res = await fetch("/api/srs", {
             method: "POST",
             headers: buildSrsHeaders(),
-            body: JSON.stringify({ action: "deleteDeck", deck: deckName }),
+            body: JSON.stringify({
+              action: "deleteDeck",
+              deck: deckName,
+              deckPageId: cardsInDeck[0]?.deckRelId || null, // truyền ID trang deck nếu có
+            }),
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok)
