@@ -1931,6 +1931,15 @@
         <div class="bg-section-label">Ảnh / GIF của bạn</div>
         <div class="bg-grid" id="bg-user-grid"><!-- render by JS --></div>
 
+        <!-- File input tách riêng, không bị xóa khi renderBgGrids chạy lại -->
+        <input
+          type="file"
+          id="bg-file-input"
+          accept="image/*"
+          style="display: none"
+          onchange="handleBgUpload(this)"
+        />
+
         <div class="bg-opacity-wrap">
           <div class="bg-section-label" style="margin-top: 0">
             Độ trong suốt
@@ -4358,16 +4367,6 @@
           label: "Bãi biển",
           url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=80",
         },
-        {
-          id: "p7",
-          label: "Rừng thu",
-          url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1400&q=80",
-        },
-        {
-          id: "p8",
-          label: "Hoàng hôn",
-          url: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=1400&q=80",
-        },
       ];
 
       // ─── IndexedDB helpers ───
@@ -4407,24 +4406,16 @@
       async function idbGetAll() {
         const db = await openBgIDB();
         return new Promise((res, rej) => {
-          const store = db
-            .transaction(IDB_STORE, "readonly")
-            .objectStore(IDB_STORE);
-          const keys = [],
-            vals = [];
-          store.openKeyCursor().onsuccess = (e) => {
-            const c = e.target.result;
-            if (c) {
-              keys.push(c.key);
-              c.continue();
-            } else {
-              const gets = keys.map((k) => idbGet(k));
-              Promise.all(gets).then((vs) =>
-                res(keys.map((k, i) => ({ key: k, url: vs[i] })))
-              );
-            }
+          const tx = db.transaction(IDB_STORE, "readonly");
+          const store = tx.objectStore(IDB_STORE);
+          const keysReq = store.getAllKeys();
+          const valsReq = store.getAll();
+          tx.oncomplete = () => {
+            const keys = keysReq.result || [];
+            const vals = valsReq.result || [];
+            res(keys.map((k, i) => ({ key: k, url: vals[i] })));
           };
-          store.openKeyCursor().onerror = () => rej();
+          tx.onerror = () => rej(tx.error);
         });
       }
       async function idbDelete(key) {
@@ -4441,6 +4432,18 @@
       let _bgActive = localStorage.getItem("srs_bg_id") || null; // id preset hoặc "user_xxx"
       let _bgOpacity = parseInt(localStorage.getItem("srs_bg_opacity") || "35");
 
+      // ─── Apply background ───
+      async function applyBg(url) {
+        const img = document.getElementById("global-bg-img");
+        if (!url) {
+          img.style.display = "none";
+          img.src = "";
+          return;
+        }
+        img.style.display = "block";
+        img.style.opacity = _bgOpacity / 100;
+        img.src = url;
+      }
       // ─── Init ───
       async function initBgSystem() {
         document.getElementById("bg-opacity-slider").value = _bgOpacity;
@@ -4461,48 +4464,60 @@
       }
 
       async function renderBgGrids() {
-        // Preset grid
         const pg = document.getElementById("bg-preset-grid");
+        const ug = document.getElementById("bg-user-grid");
+        if (!pg || !ug) return;
+
+        // ── Preset grid — dùng URL nhỏ (w=600) để tải nhanh, KHÔNG lazy-load ──
         pg.innerHTML =
-          `
-    <div class="bg-thumb bg-thumb-none ${
-      !_bgActive ? "active" : ""
-    }" onclick="selectBg(null)">
-      <span>✕</span><span>Không có</span>
-    </div>` +
+          `<div class="bg-thumb bg-thumb-none ${!_bgActive ? "active" : ""}"
+        onclick="selectBg(null)" title="Bỏ background">
+        <span>✕</span><span>Không có</span>
+      </div>` +
           BG_PRESETS.map(
-            (p) => `
-      <div class="bg-thumb ${_bgActive === p.id ? "active" : ""}"
-        onclick="selectBg('${p.id}', '${p.url}')" title="${p.label}">
-        <img src="${p.url}" loading="lazy" alt="${p.label}"/>
-      </div>`
+            (p) =>
+              `<div class="bg-thumb ${_bgActive === p.id ? "active" : ""}"
+          onclick="selectBg('${p.id}','${p.url}')" title="${p.label}">
+          <img src="${p.url.replace("w=1400", "w=600")}" alt="${p.label}"
+            onerror="this.style.display='none'"
+            style="width:100%;height:100%;object-fit:cover;display:block"/>
+          <span style="position:absolute;bottom:3px;left:0;right:0;text-align:center;
+            font-size:9px;font-weight:500;color:rgba(255,255,255,0.9);
+            text-shadow:0 1px 3px rgba(0,0,0,0.7);pointer-events:none">
+            ${p.label}
+          </span>
+        </div>`
           ).join("");
 
-        // User grid
-        const ug = document.getElementById("bg-user-grid");
+        // ── User grid ──
         let userImgs = [];
         try {
-          userImgs = await idbGetAll();
-        } catch (e) {}
-        // Lọc chỉ giữ user images (key bắt đầu bằng "user_")
-        userImgs = userImgs.filter((x) => x.key.startsWith("user_"));
+          const all = await idbGetAll();
+          userImgs = all.filter((x) => String(x.key).startsWith("user_"));
+        } catch (e) {
+          console.warn("idbGetAll error:", e);
+        }
 
         ug.innerHTML =
           userImgs
             .map(
-              (x) => `
-    <div class="bg-thumb ${_bgActive === x.key ? "active" : ""}"
-      onclick="selectBg('${x.key}', null, true)" style="position:relative">
-      <img src="${x.url}" alt="Ảnh của bạn"/>
-      <button onclick="event.stopPropagation();deleteUserBg('${x.key}')"
-        style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);color:white;border:none;font-size:10px;cursor:pointer;line-height:1">✕</button>
-    </div>`
+              (x) =>
+                `<div class="bg-thumb ${_bgActive === x.key ? "active" : ""}"
+            onclick="selectBg('${x.key}',null,true)" style="position:relative">
+            <img src="${x.url}" alt="Ảnh của bạn"
+              style="width:100%;height:100%;object-fit:cover;display:block"/>
+            <button onclick="event.stopPropagation();deleteUserBg('${x.key}')"
+              style="position:absolute;top:3px;left:3px;width:20px;height:20px;
+              border-radius:50%;background:rgba(0,0,0,0.65);color:white;
+              border:none;font-size:11px;cursor:pointer;line-height:1;
+              display:flex;align-items:center;justify-content:center">✕</button>
+          </div>`
             )
             .join("") +
-          `<div class="bg-thumb bg-user-slot" title="Tải ảnh hoặc GIF lên">
-      <input type="file" accept="image/*" onchange="handleBgUpload(this)"/>
-      📁<span>Tải lên</span>
-    </div>`;
+          `<div class="bg-thumb bg-user-slot" title="Tải ảnh / GIF lên"
+        onclick="document.getElementById('bg-file-input').click()">
+        📁<span>Tải lên</span>
+      </div>`;
       }
 
       async function selectBg(id, url, fromIDB = false) {
@@ -4522,19 +4537,29 @@
       async function handleBgUpload(input) {
         const file = input.files?.[0];
         if (!file) return;
-        // Đọc file thành base64
+        // Kiểm tra kích thước (giới hạn 15MB cho GIF lớn)
+        if (file.size > 15 * 1024 * 1024) {
+          toast("File quá lớn (tối đa 15MB)");
+          input.value = "";
+          return;
+        }
+        toast("Đang xử lý ảnh…");
         const reader = new FileReader();
         reader.onload = async (e) => {
           const dataUrl = e.target.result;
           const key = "user_" + Date.now();
           try {
-            await idbSet(key, dataUrl); // Lưu vào IndexedDB — hỗ trợ file lớn, GIF
-            toast("✓ Đã lưu ảnh vào thư viện");
+            await idbSet(key, dataUrl);
+            toast("✓ Đã lưu vào thư viện — đang áp dụng…");
             await selectBg(key, null, true);
           } catch (err) {
-            toast("Lỗi lưu ảnh: " + err.message);
+            toast("Lỗi lưu ảnh: " + (err.message || "Dung lượng quá lớn"));
           }
-          input.value = ""; // reset để có thể chọn lại
+          input.value = ""; // reset để chọn lại cùng file
+        };
+        reader.onerror = () => {
+          toast("Không đọc được file");
+          input.value = "";
         };
         reader.readAsDataURL(file);
       }
@@ -4561,6 +4586,7 @@
 
       function openBgModal() {
         document.getElementById("bg-modal").classList.add("show");
+        renderBgGrids();
       }
       function closeBgModal() {
         document.getElementById("bg-modal").classList.remove("show");
