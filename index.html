@@ -1518,6 +1518,98 @@
         color: inherit;
         opacity: 0.75;
       }
+
+      /* ── FREE STUDY TOGGLE ── */
+      .free-study-banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 1rem;
+        padding: 0.875rem 1.125rem;
+        border-radius: var(--r);
+        border: 1.5px dashed var(--bd2);
+        background: var(--bg);
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+      }
+      .free-study-banner:hover {
+        border-color: var(--purple);
+        background: var(--purple-l);
+      }
+      .free-study-banner.active {
+        border-style: solid;
+        border-color: var(--purple);
+        background: var(--purple-l);
+      }
+      .free-study-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--bg2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+        transition: background 0.2s;
+      }
+      .free-study-banner.active .free-study-icon {
+        background: rgba(127, 119, 221, 0.2);
+      }
+      .free-study-text {
+        flex: 1;
+      }
+      .free-study-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 1px;
+      }
+      .free-study-desc {
+        font-size: 11px;
+        color: var(--text2);
+      }
+      .free-study-banner.active .free-study-title {
+        color: var(--purple-d);
+      }
+      .free-study-toggle-pill {
+        width: 36px;
+        height: 20px;
+        border-radius: 999px;
+        background: var(--bd2);
+        position: relative;
+        transition: background 0.2s;
+        flex-shrink: 0;
+      }
+      .free-study-toggle-pill::after {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: white;
+        top: 3px;
+        left: 3px;
+        transition: transform 0.2s;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+      .free-study-banner.active .free-study-toggle-pill {
+        background: var(--purple);
+      }
+      .free-study-banner.active .free-study-toggle-pill::after {
+        transform: translateX(16px);
+      }
+      .free-study-count {
+        font-size: 10px;
+        color: var(--purple);
+        font-weight: 500;
+        margin-top: 2px;
+        display: none;
+      }
+      .free-study-banner.active .free-study-count {
+        display: block;
+      }
     </style>
   </head>
   <body>
@@ -1638,39 +1730,21 @@
             </div>
           </div>
 
+          <!-- Free Study Banner -->
           <div
-            style="
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              margin-top: 1rem;
-              margin-bottom: 0;
-            "
+            class="free-study-banner"
+            id="free-study-banner"
+            onclick="toggleFreeStudy()"
           >
-            <label
-              style="
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                cursor: pointer;
-                font-size: 12px;
-                color: var(--text2);
-              "
-            >
-              <input
-                type="checkbox"
-                id="free-study-toggle"
-                style="accent-color: var(--green); width: 14px; height: 14px"
-                onchange="onFreeStudyToggle(this)"
-              />
-              Học tự do — bao gồm thẻ chưa đến hạn
-            </label>
-            <span
-              id="free-study-hint"
-              style="font-size: 11px; color: var(--text3); display: none"
-            >
-              (tải tất cả thẻ…)
-            </span>
+            <div class="free-study-icon">🎯</div>
+            <div class="free-study-text">
+              <div class="free-study-title">Học tự do</div>
+              <div class="free-study-desc">
+                Bao gồm thẻ chưa đến hạn — ôn bất cứ lúc nào bạn muốn
+              </div>
+              <div class="free-study-count" id="free-study-count"></div>
+            </div>
+            <div class="free-study-toggle-pill"></div>
           </div>
 
           <div class="start-row">
@@ -1883,46 +1957,132 @@
               gap: 8px;
             "
           >
-            <div class="history-filter" id="history-filter">
-              <span class="filter-label">Lọc:</span>
-              <button
-                class="filter-btn active"
-                data-filter="all"
-                onclick="filterHistory(this)"
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 0.875rem;
+              "
+            >
+              <!-- Hàng 1: Lọc kết quả + Deck -->
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  flex-wrap: wrap;
+                "
               >
-                Tất cả
-              </button>
-              <button
-                class="filter-btn"
-                data-filter="pass"
-                onclick="filterHistory(this)"
+                <span class="filter-label">Kết quả:</span>
+                <button
+                  class="filter-btn active"
+                  data-filter="all"
+                  onclick="setLogFilter('result',this)"
+                >
+                  Tất cả
+                </button>
+                <button
+                  class="filter-btn"
+                  data-filter="pass"
+                  onclick="setLogFilter('result',this)"
+                >
+                  ✓ Đúng
+                </button>
+                <button
+                  class="filter-btn"
+                  data-filter="fail"
+                  onclick="setLogFilter('result',this)"
+                >
+                  ✗ Sai
+                </button>
+
+                <span class="filter-label" style="margin-left: 8px"
+                  >Thời gian:</span
+                >
+                <button
+                  class="filter-btn"
+                  data-filter="today"
+                  onclick="setLogFilter('result',this)"
+                >
+                  Hôm nay
+                </button>
+                <button
+                  class="filter-btn"
+                  data-filter="week"
+                  onclick="setLogFilter('result',this)"
+                >
+                  7 ngày
+                </button>
+                <button
+                  class="filter-btn"
+                  data-filter="month"
+                  onclick="setLogFilter('result',this)"
+                >
+                  30 ngày
+                </button>
+              </div>
+
+              <!-- Hàng 2: Lọc Deck + Dedup + Refresh -->
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  flex-wrap: wrap;
+                  justify-content: space-between;
+                "
               >
-                Đúng
-              </button>
-              <button
-                class="filter-btn"
-                data-filter="fail"
-                onclick="filterHistory(this)"
-              >
-                Sai
-              </button>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                  "
+                >
+                  <span class="filter-label">Bộ thẻ:</span>
+                  <select
+                    class="form-select"
+                    id="log-deck-filter"
+                    style="
+                      padding: 4px 8px;
+                      font-size: 11px;
+                      width: auto;
+                      height: 28px;
+                    "
+                    onchange="setLogDeckFilter(this.value)"
+                  >
+                    <option value="all">Tất cả</option>
+                  </select>
+
+                  <button
+                    class="filter-btn"
+                    id="dedupe-btn"
+                    onclick="toggleLogDedupe(this)"
+                    title="Chỉ hiển thị lần review cuối cùng của mỗi thẻ trong ngày"
+                  >
+                    🗂 Gộp trùng
+                  </button>
+                </div>
+                <button class="btn btn-sm" onclick="fetchLogs(true)">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    style="vertical-align: middle; margin-right: 4px"
+                  >
+                    <path d="M1 7a6 6 0 1 0 1.2-3.6" />
+                    <path d="M1 2v3h3" />
+                  </svg>
+                  Làm mới
+                </button>
+              </div>
             </div>
-            <button class="btn btn-sm" onclick="fetchLogs(true)">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 14 14"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                style="vertical-align: middle; margin-right: 4px"
-              >
-                <path d="M1 7a6 6 0 1 0 1.2-3.6" />
-                <path d="M1 2v3h3" />
-              </svg>
-              Làm mới
-            </button>
           </div>
 
           <div id="log-container">
@@ -2367,6 +2527,7 @@
       // ═══════════════════════════════════════════════════════════════════
       const S = {
         cards: [],
+        allCards: [],
         queue: [],
         current: null,
         idx: 0,
@@ -2382,6 +2543,7 @@
         logsFiltered: [],
         logFilter: "all",
         logsLoaded: false,
+        logDedupe: false,
         importData: [],
       };
 
@@ -2412,7 +2574,7 @@
         btn.classList.add("active");
         document.getElementById("tab-" + name).classList.add("active");
         if (name === "history" && !S.logsLoaded) fetchLogs();
-        if (name === "manage") renderManageList();
+        if (name === "manage") loadAndRenderManage();
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -3307,6 +3469,7 @@
           }
           S.logs = data.logs || [];
           S.logsLoaded = true;
+          populateLogDeckFilter(S.logs);
           applyLogFilter();
         } catch (err) {
           document.getElementById("log-container").innerHTML = `
@@ -3324,11 +3487,43 @@
       }
 
       function applyLogFilter() {
-        if (S.logFilter === "pass")
-          S.logsFiltered = S.logs.filter((l) => l.pass);
+        let filtered = [...S.logs];
+
+        // Lọc theo kết quả
+        if (S.logFilter === "pass") filtered = filtered.filter((l) => l.pass);
         else if (S.logFilter === "fail")
-          S.logsFiltered = S.logs.filter((l) => !l.pass);
-        else S.logsFiltered = [...S.logs];
+          filtered = filtered.filter((l) => !l.pass);
+        else if (S.logFilter === "today")
+          filtered = filtered.filter((l) => l.date === localDate());
+        else if (S.logFilter === "week") {
+          const d = new Date();
+          d.setDate(d.getDate() - 7);
+          filtered = filtered.filter(
+            (l) => l.date >= d.toLocaleDateString("en-CA")
+          );
+        } else if (S.logFilter === "month") {
+          const d = new Date();
+          d.setDate(d.getDate() - 30);
+          filtered = filtered.filter(
+            (l) => l.date >= d.toLocaleDateString("en-CA")
+          );
+        }
+
+        // Lọc theo deck
+        if (S.logDeckFilter && S.logDeckFilter !== "all")
+          filtered = filtered.filter((l) => l.deck === S.logDeckFilter);
+
+        // Deduplication — chỉ giữ bản review cuối cùng mỗi (thẻ + ngày)
+        if (S.logDedupe) {
+          const seen = new Map();
+          filtered.forEach((l) => {
+            const key = `${l.cardFront}||${l.date}`;
+            if (!seen.has(key)) seen.set(key, l); // logs đã sort descending nên item đầu là mới nhất
+          });
+          filtered = [...seen.values()];
+        }
+
+        S.logsFiltered = filtered;
         renderLogsTable(S.logsFiltered);
       }
 
@@ -3507,7 +3702,10 @@
 
       function goSetup() {
         showScreen("screen-setup");
-        if (!S.isDemo && S.cfg.token) fetchCards();
+        if (!S.isDemo && S.cfg.token) {
+          fetchCards(true); // ← force refresh để bộ thẻ vừa học biến mất
+          S.allCards = []; // ← reset allCards để manage tab cũng tải lại
+        }
       }
 
       function goHistory() {
@@ -3620,20 +3818,20 @@
       ];
 
       // ── Free Study Mode ──
-      async function onFreeStudyToggle(checkbox) {
-        if (S.isDemo) {
-          // Demo mode: đã có tất cả thẻ rồi, không cần fetch
-          toast(
-            checkbox.checked
-              ? "Demo: Đang xem tất cả thẻ mẫu"
-              : "Đã về chế độ thẻ đến hạn"
-          );
-          return;
-        }
-        const hint = document.getElementById("free-study-hint");
-        if (checkbox.checked) {
-          hint.style.display = "inline";
-          hint.textContent = "Đang tải tất cả thẻ…";
+      async function toggleFreeStudy() {
+        const banner = document.getElementById("free-study-banner");
+        const isActive = banner.classList.contains("active");
+
+        if (!isActive) {
+          // Bật Free Study
+          banner.classList.add("active");
+          if (S.isDemo) {
+            document.getElementById(
+              "free-study-count"
+            ).textContent = `${S.cards.length} thẻ đang hiển thị (demo)`;
+            toast("Demo: Đang xem tất cả thẻ mẫu");
+            return;
+          }
           setStatus("loading", "Đang tải tất cả thẻ…");
           try {
             const res = await fetch(`/api/srs?action=all&_=${Date.now()}`, {
@@ -3646,18 +3844,65 @@
             S.cards = data.cards || [];
             S.isFreeStudy = true;
             setStatus("ok", `Học tự do — ${S.cards.length} thẻ`);
-            hint.textContent = `${S.cards.length} thẻ`;
+            document.getElementById(
+              "free-study-count"
+            ).textContent = `${S.cards.length} thẻ — bao gồm cả chưa đến hạn`;
             updateSetupStats();
           } catch (err) {
-            checkbox.checked = false;
-            hint.style.display = "none";
+            banner.classList.remove("active");
             toast("Lỗi tải thẻ: " + err.message);
           }
         } else {
-          hint.style.display = "none";
+          // Tắt Free Study
+          banner.classList.remove("active");
           S.isFreeStudy = false;
-          await fetchCards(true); // về lại chế độ due
+          await fetchCards(true);
         }
+      }
+
+      // ── Log Filter System (mở rộng) ──
+      S.logFilter = "all";
+      S.logDeckFilter = "all";
+      S.logDedupe = false;
+
+      function setLogFilter(type, btn) {
+        document
+          .querySelectorAll("[onclick^=\"setLogFilter('result'\"]")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        S.logFilter = btn.dataset.filter;
+        applyLogFilter();
+      }
+
+      function setLogDeckFilter(val) {
+        S.logDeckFilter = val;
+        applyLogFilter();
+      }
+
+      function toggleLogDedupe(btn) {
+        S.logDedupe = !S.logDedupe;
+        btn.classList.toggle("active", S.logDedupe);
+        applyLogFilter();
+      }
+
+      // Sau khi load logs, cập nhật dropdown Deck
+      function populateLogDeckFilter(logs) {
+        const decks = [
+          ...new Set(logs.map((l) => l.deck).filter(Boolean)),
+        ].sort();
+        const sel = document.getElementById("log-deck-filter");
+        if (!sel) return;
+        const cur = sel.value;
+        sel.innerHTML =
+          `<option value="all">Tất cả</option>` +
+          decks
+            .map(
+              (d) =>
+                `<option value="${escHtml(d)}"${
+                  d === cur ? " selected" : ""
+                }>${escHtml(d)}</option>`
+            )
+            .join("");
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -3666,11 +3911,38 @@
       let _editCardId = null;
       let _renameDeckOld = null;
 
+      async function loadAndRenderManage() {
+        // Luôn load TẤT CẢ thẻ cho tab Quản lý, không chỉ thẻ đến hạn
+        const listEl = document.getElementById("manage-list");
+        if (!S.allCards || S.allCards.length === 0) {
+          listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">
+      <div style="width:20px;height:20px;border:2px solid var(--bd2);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px"></div>
+      Đang tải tất cả thẻ…</div>`;
+          if (!S.isDemo && S.cfg.token) {
+            try {
+              const res = await fetch(`/api/srs?action=all&_=${Date.now()}`, {
+                cache: "no-store",
+                headers: buildSrsHeaders(),
+              });
+              const data = await res.json();
+              S.allCards = data.cards || [];
+            } catch (e) {
+              S.allCards = [...S.cards]; // fallback về thẻ đến hạn
+              toast("Chỉ tải được thẻ đến hạn: " + e.message);
+            }
+          } else {
+            S.allCards = [...S.cards]; // demo mode
+          }
+        }
+        renderManageList();
+      }
+
       function renderManageList() {
+        const source = S.allCards && S.allCards.length ? S.allCards : S.cards;
         const q = (
           document.getElementById("manage-search")?.value || ""
         ).toLowerCase();
-        const pool = S.cards.filter(
+        const pool = source.filter(
           (c) =>
             !q ||
             c.front.toLowerCase().includes(q) ||
@@ -3835,6 +4107,14 @@
             card.deck = deck;
             card.tags = tags;
           }
+          // Cập nhật allCards
+          const allCard = S.allCards.find((c) => c.id === _editCardId);
+          if (allCard) {
+            allCard.front = front;
+            allCard.back = back;
+            allCard.deck = deck;
+            allCard.tags = tags;
+          }
           toast("✓ Đã cập nhật thẻ");
           document.getElementById("edit-modal").classList.remove("show");
           renderManageList();
@@ -3868,6 +4148,7 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok) throw new Error(data.error || "Lỗi xóa thẻ");
           S.cards = S.cards.filter((c) => c.id !== id);
+          S.allCards = S.allCards.filter((c) => c.id !== id);
           toast("✓ Đã xóa thẻ");
           renderManageList();
           renderDecks(S.cards);

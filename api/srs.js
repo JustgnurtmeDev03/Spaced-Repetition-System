@@ -127,7 +127,10 @@ export default async function handler(req, res) {
             newEf: pr[LOG.ef]?.number ?? null,
             deck:
               pr[LOG.deck]?.select?.name ||
-              pr[LOG.deck]?.rich_text?.map((t) => t.plain_text).join("") ||
+              (pr[LOG.deck]?.rich_text || [])
+                .map((t) => t.plain_text)
+                .join("") ||
+              pr[LOG.deck]?.title?.map((t) => t.plain_text).join("") ||
               null,
             pass: ratingNum >= 3,
           };
