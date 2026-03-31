@@ -1625,7 +1625,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0.15;
+        opacity: 0.35; /* ← tăng từ 0.15 lên 0.35 */
         transition: opacity 0.6s ease;
         display: none;
       }
@@ -1634,10 +1634,10 @@
         inset: 0;
         background: linear-gradient(
           160deg,
-          rgba(var(--bg-rgb, 248, 247, 244), 0.75) 0%,
-          rgba(var(--bg-rgb, 248, 247, 244), 0.45) 40%,
-          rgba(var(--bg-rgb, 248, 247, 244), 0.45) 60%,
-          rgba(var(--bg-rgb, 248, 247, 244), 0.8) 100%
+          rgba(248, 247, 244, 0.45) 0%,
+          rgba(248, 247, 244, 0.15) 35%,
+          rgba(248, 247, 244, 0.15) 65%,
+          rgba(248, 247, 244, 0.5) 100%
         );
       }
       /* Tất cả screen content đều nổi lên trên bg */
@@ -1653,15 +1653,15 @@
 
       @media (prefers-color-scheme: dark) {
         #global-bg-img {
-          opacity: 0.1;
-        }
+          opacity: 0.25;
+        } /* ← tăng từ 0.10 */
         #global-bg-overlay {
           background: linear-gradient(
             160deg,
-            rgba(26, 25, 23, 0.82) 0%,
-            rgba(26, 25, 23, 0.5) 40%,
-            rgba(26, 25, 23, 0.5) 60%,
-            rgba(26, 25, 23, 0.85) 100%
+            rgba(26, 25, 23, 0.55) 0%,
+            rgba(26, 25, 23, 0.2) 35%,
+            rgba(26, 25, 23, 0.2) 65%,
+            rgba(26, 25, 23, 0.6) 100%
           );
         }
       }
@@ -1939,12 +1939,11 @@
             <label>Mờ hơn</label>
             <input
               type="range"
-              min="4"
-              max="45"
+              min="10"
+              max="70"
               step="1"
-              value="15"
+              value="35"
               id="bg-opacity-slider"
-              oninput="onBgOpacityChange(this.value)"
             />
             <label>Rõ hơn</label>
             <span class="bg-opacity-val" id="bg-opacity-val">15%</span>
@@ -2577,59 +2576,6 @@
      SCREEN 2: REVIEW
 ══════════════════════════════════════════ -->
     <div class="screen" id="screen-review">
-      <!-- Background Layer -->
-      <div class="review-bg" id="review-bg">
-        <img id="review-bg-img" src="" alt="" style="display: none" />
-        <div class="review-bg-overlay"></div>
-      </div>
-
-      <!-- BG Picker Button -->
-      <button
-        class="bg-picker-btn"
-        onclick="toggleBgPicker()"
-        title="Đổi background"
-      >
-        🖼️
-      </button>
-
-      <!-- BG Picker Panel -->
-      <div class="bg-picker-panel" id="bg-picker-panel">
-        <div class="bg-picker-title">Chọn background</div>
-        <div class="bg-presets" id="bg-presets">
-          <div class="bg-preset none-preset" onclick="setBg(null)">✕</div>
-          <!-- Presets sẽ được render bởi JS -->
-        </div>
-        <div class="bg-opacity-row">
-          <label>Độ mờ</label>
-          <input
-            type="range"
-            min="5"
-            max="40"
-            step="1"
-            value="18"
-            id="bg-opacity-slider"
-            oninput="setBgOpacity(this.value)"
-          />
-          <span
-            id="bg-opacity-val"
-            style="font-size: 11px; color: var(--text2); min-width: 28px"
-            >18%</span
-          >
-        </div>
-        <div class="bg-upload-row">
-          <label
-            class="file-label"
-            style="width: 100%; justify-content: center"
-          >
-            <input
-              type="file"
-              accept="image/*,.gif"
-              onchange="handleBgUpload(this)"
-            />
-            📁 Tải ảnh/GIF của bạn
-          </label>
-        </div>
-      </div>
       <div class="review-topbar">
         <button class="btn-icon" onclick="exitSession()" title="Thoát">
           <svg
@@ -4493,20 +4439,7 @@
 
       // ─── State ───
       let _bgActive = localStorage.getItem("srs_bg_id") || null; // id preset hoặc "user_xxx"
-      let _bgOpacity = parseInt(localStorage.getItem("srs_bg_opacity") || "15");
-
-      // ─── Apply background ───
-      async function applyBg(url) {
-        const img = document.getElementById("global-bg-img");
-        if (!url) {
-          img.style.display = "none";
-          img.src = "";
-          return;
-        }
-        img.style.display = "block";
-        img.style.opacity = _bgOpacity / 100;
-        img.src = url;
-      }
+      let _bgOpacity = parseInt(localStorage.getItem("srs_bg_opacity") || "35");
 
       // ─── Init ───
       async function initBgSystem() {

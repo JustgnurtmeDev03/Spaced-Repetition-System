@@ -616,46 +616,88 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, count: data.results.length });
       }
 
-      // ── deleteDeck: archive all cards in deck ───
+      // ── deleteDeck: archive all cards + logs ───────────────────────────
       if (body.action === "deleteDeck") {
-        const { deck: deckName, deckPageId } = body;
+        const { deck: deckName } = body;
         if (!deckName?.trim())
           return res.status(400).json({ error: "Thiếu tên bộ thẻ" });
 
         try {
-          // 1. Lấy tất cả thẻ trong DB và filter theo deck name (đã resolve)
+          // 1. Lấy TẤT CẢ thẻ trong DB, resolve deck name (kể cả relation type)
           const allData = await notionQuery(token, cardDb, null, null);
           const allCards = allData.results.map((p) => parseCard(p, PROP));
 
-          // Resolve deck names nếu cần
           const needResolve = allCards.filter((c) => !c.deck && c.deckRelId);
-          const uniqueRelIds = [
-            ...new Set(needResolve.map((c) => c.deckRelId)),
-          ];
-          const deckNameMap = {};
-          await Promise.all(
-            uniqueRelIds.map(async (id) => {
-              const name = await resolvePageTitle(token, id);
-              if (name) deckNameMap[id] = name;
-            })
-          );
-          allCards.forEach((c) => {
-            if (!c.deck && c.deckRelId)
-              c.deck = deckNameMap[c.deckRelId] || null;
-          });
+          if (needResolve.length > 0) {
+            const uniqueRelIds = [
+              ...new Set(needResolve.map((c) => c.deckRelId)),
+            ];
+            const deckNameMap = {};
+            await Promise.all(
+              uniqueRelIds.map(async (id) => {
+                const name = await resolvePageTitle(token, id).catch(
+                  () => null
+                );
+                if (name) deckNameMap[id] = name;
+              })
+            );
+            allCards.forEach((c) => {
+              if (!c.deck && c.deckRelId)
+                c.deck = deckNameMap[c.deckRelId] || null;
+            });
+          }
 
           const cardsToDelete = allCards.filter(
             (c) => c.deck === deckName.trim()
           );
           const cardIds = cardsToDelete.map((c) => c.id);
 
-          if (cardIds.length === 0) {
+          if (cardIds.length === 0)
             return res
               .status(200)
               .json({ ok: true, deletedCards: 0, deletedLogs: 0 });
+
+          // ⚠️ QUAN TRỌNG: Xóa LOG TRƯỚC, xóa thẻ SAU
+          // Lý do: khi thẻ bị archive, Notion tự xóa relation trong log → không tìm được log nữa
+
+          // 2. Tìm và archive tất cả log liên quan TRƯỚC KHI xóa thẻ
+          let deletedLogs = 0;
+          if (logDb) {
+            // Query log cho từng cardId song song
+            const logQueryResults = await Promise.all(
+              cardIds.map((cardId) =>
+                notionQuery(
+                  token,
+                  logDb,
+                  { property: LOG.card, relation: { contains: cardId } },
+                  null
+                ).catch(() => ({ results: [] }))
+              )
+            );
+            const allLogPages = logQueryResults.flatMap((r) => r.results);
+            // Dedup
+            const uniqueLogIds = [
+              ...new Map(allLogPages.map((l) => [l.id, l])).values(),
+            ].map((l) => l.id);
+
+            // Archive tất cả logs song song
+            await Promise.all(
+              uniqueLogIds.map((id) =>
+                fetch(`https://api.notion.com/v1/pages/${id}`, {
+                  method: "PATCH",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Notion-Version": "2022-06-28",
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ archived: true }),
+                })
+              )
+            );
+            deletedLogs = uniqueLogIds.length;
           }
 
-          // 2. Xóa thẻ (archive)
+          // 3. Sau khi log đã xóa xong → mới archive thẻ
           await Promise.all(
             cardIds.map((id) =>
               fetch(`https://api.notion.com/v1/pages/${id}`, {
@@ -669,44 +711,6 @@ export default async function handler(req, res) {
               })
             )
           );
-
-          // 3. Xóa log liên quan đến các thẻ vừa bị xóa (nếu có logDb)
-          let deletedLogs = 0;
-          if (logDb && cardIds.length > 0) {
-            // Tìm logs có Card relation là một trong các cardIds
-            const logQueries = cardIds.map((cardId) =>
-              notionQuery(
-                token,
-                logDb,
-                {
-                  property: LOG.card,
-                  relation: { contains: cardId },
-                },
-                null
-              )
-            );
-            const logResults = await Promise.all(logQueries);
-            const allLogs = logResults.flatMap((r) => r.results);
-            // Dedup (một log có thể match nhiều query)
-            const uniqueLogs = [
-              ...new Map(allLogs.map((l) => [l.id, l])).values(),
-            ];
-
-            await Promise.all(
-              uniqueLogs.map((l) =>
-                fetch(`https://api.notion.com/v1/pages/${l.id}`, {
-                  method: "PATCH",
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Notion-Version": "2022-06-28",
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ archived: true }),
-                })
-              )
-            );
-            deletedLogs = uniqueLogs.length;
-          }
 
           return res.status(200).json({
             ok: true,
