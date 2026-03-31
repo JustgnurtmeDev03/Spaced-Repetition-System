@@ -264,7 +264,11 @@ export default async function handler(req, res) {
 
         const props = {
           [LOG.title]: { title: [{ text: { content: nameText } }] },
-          [LOG.date]: { date: { start: dateStr } },
+          [LOG.date]: {
+            date: {
+              start: new Date().toISOString(), // "2026-03-31T10:36:00.000Z" — Notion sẽ lưu cả giờ
+            },
+          },
           [LOG.rating]: { select: { name: String(ratingNum) } },
           [LOG.interval]: { number: newInterval },
           [LOG.ef]: { number: parseFloat(parseFloat(newEf).toFixed(4)) },
@@ -388,9 +392,6 @@ export default async function handler(req, res) {
 
             await notionCreate(token, cardDb, props);
             results.success++;
-
-            // Delay nhỏ tránh rate limit Notion (3 req/s)
-            await new Promise((r) => setTimeout(r, 340));
           } catch (e) {
             results.failed++;
             results.errors.push(
@@ -437,10 +438,49 @@ export default async function handler(req, res) {
             await new Promise((r) => setTimeout(r, 340)); // Tránh rate limit
           }
 
+          let deletedLogs = 0;
+          if (logDb) {
+            // Với mỗi thẻ đã xóa, tìm và archive log liên quan
+            const cardIds = cardsToDelete.map((c) => c.id);
+            const logDeleteResults = await Promise.all(
+              cardIds.map(async (cardId) => {
+                try {
+                  const logData = await notionQuery(
+                    token,
+                    logDb,
+                    {
+                      property: LOG.card,
+                      relation: { contains: cardId },
+                    },
+                    null
+                  );
+                  await Promise.all(
+                    logData.results.map((l) =>
+                      fetch(`https://api.notion.com/v1/pages/${l.id}`, {
+                        method: "PATCH",
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                          "Notion-Version": "2022-06-28",
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ archived: true }),
+                      })
+                    )
+                  );
+                  return logData.results.length;
+                } catch (e) {
+                  return 0;
+                }
+              })
+            );
+            deletedLogs = logDeleteResults.reduce((a, b) => a + b, 0);
+          }
+
           return res.status(200).json({
             ok: true,
             deleted: cardsToDelete.length,
-            message: `Đã xóa ${cardsToDelete.length} thẻ khỏi bộ "${deckName}"`,
+            deletedLogs,
+            message: `Đã xóa ${cardsToDelete.length} thẻ và ${deletedLogs} bản ghi lịch sử của bộ "${deckName}"`,
           });
         } catch (e) {
           return res.status(500).json({

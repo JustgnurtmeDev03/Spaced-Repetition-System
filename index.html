@@ -1610,6 +1610,185 @@
       .free-study-banner.active .free-study-count {
         display: block;
       }
+
+      /* ── REVIEW BACKGROUND ── */
+      #screen-review {
+        position: relative;
+        overflow: hidden;
+      }
+      .review-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .review-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.18;
+        filter: blur(1px) saturate(1.2);
+        transition: opacity 0.5s;
+      }
+      .review-bg-overlay {
+        position: absolute;
+        inset: 0;
+        /* gradient che phần trên để topbar dễ đọc, dần trong suốt ở giữa */
+        background: linear-gradient(
+          to bottom,
+          var(--surface) 0%,
+          rgba(var(--bg-rgb, 248, 247, 244), 0.6) 25%,
+          transparent 55%,
+          rgba(var(--bg-rgb, 248, 247, 244), 0.7) 100%
+        );
+      }
+      .review-topbar,
+      .review-body {
+        position: relative;
+        z-index: 1;
+      }
+      /* Dark mode override */
+      @media (prefers-color-scheme: dark) {
+        .review-bg img {
+          opacity: 0.12;
+        }
+      }
+
+      /* ── BG PICKER BUTTON ── */
+      .bg-picker-btn {
+        position: fixed;
+        bottom: 1.25rem;
+        right: 1.25rem;
+        z-index: 10;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 0.5px solid var(--bd2);
+        color: var(--text2);
+        font-size: 18px;
+        cursor: pointer;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+      .bg-picker-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      }
+      #screen-review.active .bg-picker-btn {
+        display: flex;
+      }
+
+      /* ── BG PICKER PANEL ── */
+      .bg-picker-panel {
+        position: fixed;
+        bottom: 4.5rem;
+        right: 1.25rem;
+        z-index: 10;
+        background: var(--surface);
+        border: 0.5px solid var(--bd2);
+        border-radius: var(--rl);
+        padding: 1rem;
+        width: 300px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        display: none;
+      }
+      .bg-picker-panel.show {
+        display: block;
+      }
+      .bg-picker-title {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text3);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+      }
+      .bg-presets {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-bottom: 0.875rem;
+      }
+      .bg-preset {
+        aspect-ratio: 16/9;
+        border-radius: 6px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: border-color 0.15s;
+      }
+      .bg-preset:hover,
+      .bg-preset.active {
+        border-color: var(--green);
+      }
+      .bg-preset img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .bg-preset.none-preset {
+        background: var(--bg2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        border-color: var(--bd);
+      }
+      .bg-opacity-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 0.75rem;
+      }
+      .bg-opacity-row label {
+        font-size: 11px;
+        color: var(--text2);
+        white-space: nowrap;
+      }
+      .bg-opacity-row input {
+        flex: 1;
+        accent-color: var(--green);
+      }
+      .bg-upload-row {
+        margin-top: 0.75rem;
+      }
+
+      /* ── COLLAPSIBLE DECK ── */
+      .manage-deck-header {
+        cursor: pointer;
+        border-radius: var(--r);
+        padding: 6px 8px;
+        margin: 0.875rem -8px 0.4rem;
+        transition: background 0.15s;
+      }
+      .manage-deck-header:hover {
+        background: var(--bg2);
+      }
+      .deck-chevron {
+        display: inline-block;
+        transition: transform 0.2s;
+        margin-right: 4px;
+        font-size: 10px;
+        color: var(--text3);
+      }
+      .manage-deck-section.collapsed .deck-chevron {
+        transform: rotate(-90deg);
+      }
+      .manage-deck-section.collapsed .card-list {
+        display: none;
+      }
+      .deck-card-count-badge {
+        font-size: 10px;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: var(--bg3);
+        color: var(--text2);
+        margin-left: 6px;
+      }
     </style>
   </head>
   <body>
@@ -2237,6 +2416,59 @@
      SCREEN 2: REVIEW
 ══════════════════════════════════════════ -->
     <div class="screen" id="screen-review">
+      <!-- Background Layer -->
+      <div class="review-bg" id="review-bg">
+        <img id="review-bg-img" src="" alt="" style="display: none" />
+        <div class="review-bg-overlay"></div>
+      </div>
+
+      <!-- BG Picker Button -->
+      <button
+        class="bg-picker-btn"
+        onclick="toggleBgPicker()"
+        title="Đổi background"
+      >
+        🖼️
+      </button>
+
+      <!-- BG Picker Panel -->
+      <div class="bg-picker-panel" id="bg-picker-panel">
+        <div class="bg-picker-title">Chọn background</div>
+        <div class="bg-presets" id="bg-presets">
+          <div class="bg-preset none-preset" onclick="setBg(null)">✕</div>
+          <!-- Presets sẽ được render bởi JS -->
+        </div>
+        <div class="bg-opacity-row">
+          <label>Độ mờ</label>
+          <input
+            type="range"
+            min="5"
+            max="40"
+            step="1"
+            value="18"
+            id="bg-opacity-slider"
+            oninput="setBgOpacity(this.value)"
+          />
+          <span
+            id="bg-opacity-val"
+            style="font-size: 11px; color: var(--text2); min-width: 28px"
+            >18%</span
+          >
+        </div>
+        <div class="bg-upload-row">
+          <label
+            class="file-label"
+            style="width: 100%; justify-content: center"
+          >
+            <input
+              type="file"
+              accept="image/*,.gif"
+              onchange="handleBgUpload(this)"
+            />
+            📁 Tải ảnh/GIF của bạn
+          </label>
+        </div>
+      </div>
       <div class="review-topbar">
         <button class="btn-icon" onclick="exitSession()" title="Thoát">
           <svg
@@ -2545,6 +2777,7 @@
         logsLoaded: false,
         logDedupe: false,
         importData: [],
+        _collapsedDecks: null,
       };
 
       // ═══════════════════════════════════════════════════════════════════
@@ -2953,6 +3186,7 @@
         document.getElementById("deck-label").textContent =
           S.selectedDeck === "all" ? "Tất cả bộ thẻ" : S.selectedDeck;
         showCard(0);
+        initBg();
       }
 
       function showCard(i) {
@@ -3360,34 +3594,74 @@
 
         const progress = document.getElementById("import-progress");
         const progressText = document.getElementById("import-progress-text");
+        const confirmBtn = document.querySelector("#preview-wrap .btn-primary");
+
         progress.classList.add("show");
-        progressText.textContent = `Đang import ${S.importData.length} thẻ lên Notion...`;
-        document.querySelector("#preview-wrap .btn-primary").disabled = true;
+        if (confirmBtn) confirmBtn.disabled = true;
+
+        const total = S.importData.length;
+        let done = 0,
+          success = 0,
+          failed = 0;
+        progressText.textContent = `Đang import 0 / ${total} thẻ…`;
+
+        // Chia thành batch, mỗi batch chạy song song
+        // Notion rate limit: ~3 req/s → batch 3 thẻ, delay 350ms giữa các batch
+        const BATCH_SIZE = 3;
+        const batches = [];
+        for (let i = 0; i < S.importData.length; i += BATCH_SIZE)
+          batches.push(S.importData.slice(i, i + BATCH_SIZE));
 
         try {
-          const res = await fetch("/api/srs", {
-            method: "POST",
-            headers: buildSrsHeaders(),
-            body: JSON.stringify({ action: "import", cards: S.importData }),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+          for (const batch of batches) {
+            const results = await Promise.all(
+              batch.map(async (card) => {
+                try {
+                  const res = await fetch("/api/srs", {
+                    method: "POST",
+                    headers: buildSrsHeaders(),
+                    body: JSON.stringify({ action: "create", ...card }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  if (!res.ok || !data.ok)
+                    throw new Error(data.error || "failed");
+                  return true;
+                } catch (e) {
+                  return false;
+                }
+              })
+            );
+            results.forEach((ok) => (ok ? success++ : failed++));
+            done += batch.length;
+            progressText.textContent = `Đang import ${done} / ${total} thẻ… (${success} thành công)`;
+            // Delay ngắn giữa các batch để không bị rate limit
+            if (done < total) await new Promise((r) => setTimeout(r, 350));
+          }
 
           progress.classList.remove("show");
           document.getElementById("preview-wrap").style.display = "none";
           document.getElementById("csv-input").value = "";
           S.importData = [];
+          // BUG FIX: reset file input để lần sau có thể chọn lại cùng file
+          const fileInput = document.querySelector(
+            '#tab-create input[type="file"]'
+          );
+          if (fileInput) fileInput.value = "";
 
           const msg =
-            data.failed > 0
-              ? `✓ Import hoàn tất: ${data.success} thẻ thành công, ${data.failed} thất bại`
-              : `✓ Import thành công ${data.success} thẻ vào Notion!`;
+            failed > 0
+              ? `✓ Import hoàn tất: ${success} thành công, ${failed} thất bại`
+              : `✓ Import thành công ${success} thẻ vào Notion!`;
           showAlert("create-alert", "success", msg);
+          toast(msg);
+          S.allCards = []; // Reset để manage tab tải lại
           await fetchCards(true);
         } catch (err) {
           progress.classList.remove("show");
           showAlert("create-alert", "error", "Lỗi import: " + err.message);
-          document.querySelector("#preview-wrap .btn-primary").disabled = false;
+        } finally {
+          // BUG FIX: luôn enable lại nút dù thành công hay thất bại
+          if (confirmBtn) confirmBtn.disabled = false;
         }
       }
 
@@ -3812,12 +4086,20 @@
 
       function formatDate(ds) {
         if (!ds) return "—";
-        const d = new Date(ds + "T00:00:00");
-        return d.toLocaleDateString("vi-VN", {
+        // Nếu ds có chứa "T" (ISO format) thì parse trực tiếp, nếu không thêm T00:00
+        const d = ds.includes("T") ? new Date(ds) : new Date(ds + "T00:00:00");
+        const datePart = d.toLocaleDateString("vi-VN", {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
         });
+        const timePart = d.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        // Chỉ hiện giờ nếu không phải 00:00
+        if (timePart === "00:00") return datePart;
+        return `${datePart} ${timePart}`;
       }
 
       function escHtml(s) {
@@ -3935,6 +4217,127 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
+      // REVIEW BACKGROUND
+      // ═══════════════════════════════════════════════════════════════════
+      const BG_PRESETS = [
+        // Thêm URL ảnh/GIF bạn muốn làm preset ở đây
+        // Format: { label: "tên", url: "https://..." }
+        // Ví dụ dùng unsplash (ảnh tĩnh đẹp, tải nhanh):
+        {
+          label: "Rừng",
+          url: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=80",
+        },
+        {
+          label: "Biển",
+          url: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1200&q=80",
+        },
+        {
+          label: "Núi",
+          url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=80",
+        },
+        {
+          label: "Hoa anh đào",
+          url: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1200&q=80",
+        },
+        {
+          label: "Mưa",
+          url: "https://images.unsplash.com/photo-1428592953211-077101b2021b?w=1200&q=80",
+        },
+        {
+          label: "Thiên hà",
+          url: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1200&q=80",
+        },
+        {
+          label: "Bãi biển",
+          url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80",
+        },
+      ];
+
+      let _bgCurrent = localStorage.getItem("srs_bg_url") || null;
+      let _bgOpacity = parseInt(localStorage.getItem("srs_bg_opacity") || "18");
+
+      function initBg() {
+        // Render presets
+        const container = document.getElementById("bg-presets");
+        container.innerHTML = `<div class="bg-preset none-preset ${
+          !_bgCurrent ? "active" : ""
+        }" onclick="setBg(null)">✕</div>`;
+        BG_PRESETS.forEach((p, i) => {
+          container.innerHTML += `
+      <div class="bg-preset ${
+        _bgCurrent === p.url ? "active" : ""
+      }" onclick="setBg('${p.url}', this)" title="${p.label}">
+        <img src="${p.url}" loading="lazy" alt="${p.label}"/>
+      </div>`;
+        });
+        document.getElementById("bg-opacity-slider").value = _bgOpacity;
+        document.getElementById("bg-opacity-val").textContent =
+          _bgOpacity + "%";
+        applyBg();
+      }
+
+      function applyBg() {
+        const img = document.getElementById("review-bg-img");
+        if (_bgCurrent) {
+          img.src = _bgCurrent;
+          img.style.display = "block";
+          img.style.opacity = _bgOpacity / 100;
+        } else {
+          img.style.display = "none";
+        }
+      }
+
+      function setBg(url, el) {
+        _bgCurrent = url;
+        localStorage.setItem("srs_bg_url", url || "");
+        // Update active state
+        document
+          .querySelectorAll(".bg-preset")
+          .forEach((p) => p.classList.remove("active"));
+        if (el) el.classList.add("active");
+        else document.querySelector(".none-preset")?.classList.add("active");
+        applyBg();
+      }
+
+      function setBgOpacity(val) {
+        _bgOpacity = parseInt(val);
+        localStorage.setItem("srs_bg_opacity", _bgOpacity);
+        document.getElementById("bg-opacity-val").textContent =
+          _bgOpacity + "%";
+        const img = document.getElementById("review-bg-img");
+        img.style.opacity = _bgOpacity / 100;
+      }
+
+      function handleBgUpload(input) {
+        const file = input.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const url = e.target.result; // base64 — chỉ dùng trong session này
+          setBg(url);
+          // Không lưu localStorage vì base64 quá nặng
+          toast("✓ Đã áp dụng ảnh của bạn (chỉ trong session này)");
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function toggleBgPicker() {
+        document.getElementById("bg-picker-panel").classList.toggle("show");
+      }
+
+      // Đóng picker khi click ngoài
+      document.addEventListener("click", (e) => {
+        const panel = document.getElementById("bg-picker-panel");
+        const btn = document.querySelector(".bg-picker-btn");
+        if (
+          panel?.classList.contains("show") &&
+          !panel.contains(e.target) &&
+          !btn?.contains(e.target)
+        )
+          panel.classList.remove("show");
+      });
+
+      // ═══════════════════════════════════════════════════════════════════
       // MANAGE TAB
       // ═══════════════════════════════════════════════════════════════════
       let _editCardId = null;
@@ -3967,7 +4370,7 @@
       }
 
       function renderManageList() {
-        const source = S.allCards && S.allCards.length ? S.allCards : S.cards;
+        const source = S.allCards?.length ? S.allCards : S.cards;
         const q = (
           document.getElementById("manage-search")?.value || ""
         ).toLowerCase();
@@ -3980,6 +4383,13 @@
             (c.tags || []).some((t) => t.toLowerCase().includes(q))
         );
 
+        if (!pool.length) {
+          document.getElementById(
+            "manage-list"
+          ).innerHTML = `<div class="empty-state"><p>Không tìm thấy thẻ nào</p></div>`;
+          return;
+        }
+
         // Group by deck
         const deckMap = {};
         pool.forEach((c) => {
@@ -3988,54 +4398,59 @@
           deckMap[d].push(c);
         });
 
-        if (!pool.length) {
-          document.getElementById(
-            "manage-list"
-          ).innerHTML = `<div class="empty-state"><p>Không tìm thấy thẻ nào</p></div>`;
-          return;
-        }
+        const colors = [
+          "#7f77dd",
+          "#ef9f27",
+          "#e24b4a",
+          "#378add",
+          "#1d9e75",
+          "#c97bbd",
+          "#e07d3c",
+          "#5bb8b0",
+        ];
+        const bgs = [
+          "#eeedfe",
+          "#faeeda",
+          "#fcebeb",
+          "#e6f1fb",
+          "#e1f5ee",
+          "#f7eaf5",
+          "#faebd7",
+          "#e0f5f3",
+        ];
 
         let html = "";
         Object.entries(deckMap).forEach(([deck, cards]) => {
           const ci = deckColorIndex(deck);
-          const colors = [
-            "#7f77dd",
-            "#ef9f27",
-            "#e24b4a",
-            "#378add",
-            "#1d9e75",
-            "#c97bbd",
-            "#e07d3c",
-            "#5bb8b0",
-          ];
-          const bgs = [
-            "#eeedfe",
-            "#faeeda",
-            "#fcebeb",
-            "#e6f1fb",
-            "#e1f5ee",
-            "#f7eaf5",
-            "#faebd7",
-            "#e0f5f3",
-          ];
+          // Nhớ trạng thái collapsed — lưu trong S._collapsedDecks
+          const isCollapsed = (S._collapsedDecks || new Set()).has(deck);
+
           html += `
-      <div class="manage-deck-header">
-        <span class="manage-deck-title" style="color:${colors[ci]}">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${
-            colors[ci]
-          };margin-right:6px;vertical-align:middle"></span>
-          ${escHtml(deck)} — ${cards.length} thẻ
-        </span>
-        <div class="manage-deck-actions">
-          <button class="btn btn-sm" onclick="openRenameDeck('${escHtml(
-            deck
-          )}')">✏️ Đổi tên</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteDeck('${escHtml(
-            deck
-          )}')">🗑 Xóa bộ</button>
+      <div class="manage-deck-section${
+        isCollapsed ? " collapsed" : ""
+      }" data-deck="${escHtml(deck)}">
+        <div class="manage-deck-header" onclick="toggleDeckCollapse('${escHtml(
+          deck
+        ).replace(/'/g, "\\'")}', this)">
+          <span class="manage-deck-title" style="color:${colors[ci]}">
+            <span class="deck-chevron">▼</span>
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${
+              colors[ci]
+            };margin-right:5px;vertical-align:middle"></span>
+            ${escHtml(deck)}
+            <span class="deck-card-count-badge">${cards.length} thẻ</span>
+          </span>
+          <div class="manage-deck-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-sm" onclick="openRenameDeck('${escHtml(
+              deck
+            ).replace(/'/g, "\\'")}')">✏️ Đổi tên</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteDeck('${escHtml(
+              deck
+            ).replace(/'/g, "\\'")}')">🗑 Xóa bộ</button>
+          </div>
         </div>
-      </div>
-      <div class="card-list">`;
+        <div class="card-list">`;
+
           cards.forEach((c) => {
             const tagBadges = (c.tags || [])
               .map(
@@ -4056,6 +4471,13 @@
               <span style="font-size:10px;color:var(--text3)">EF ${c.ef?.toFixed(
                 1
               )} · ${c.status || "New"}</span>
+              ${
+                c.next
+                  ? `<span style="font-size:10px;color:var(--text3)">📅 ${formatDate(
+                      c.next
+                    )}</span>`
+                  : ""
+              }
             </div>
           </div>
           <div class="card-item-actions">
@@ -4068,10 +4490,23 @@
           </div>
         </div>`;
           });
-          html += `</div>`;
+          html += `</div></div>`;
         });
 
         document.getElementById("manage-list").innerHTML = html;
+      }
+
+      // Toggle collapse state
+      function toggleDeckCollapse(deckName, headerEl) {
+        if (!S._collapsedDecks) S._collapsedDecks = new Set();
+        const section = headerEl.closest(".manage-deck-section");
+        if (S._collapsedDecks.has(deckName)) {
+          S._collapsedDecks.delete(deckName);
+          section.classList.remove("collapsed");
+        } else {
+          S._collapsedDecks.add(deckName);
+          section.classList.add("collapsed");
+        }
       }
 
       // ── Edit Card ──
