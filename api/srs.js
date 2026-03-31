@@ -406,87 +406,99 @@ export default async function handler(req, res) {
       // ── delete-deck: xóa tất cả thẻ trong bộ ────────────
       if (body.action === "delete-deck") {
         const { deckName } = body;
-        if (!deckName?.trim()) {
+        if (!deckName?.trim())
           return res.status(400).json({ error: "Thiếu tên bộ thẻ (deckName)" });
-        }
 
         try {
-          // Query tất cả thẻ trong deck
-          const data = await notionQuery(token, cardDb, {
-            property: PROP.deck,
-            select: { equals: deckName.trim() },
-          });
+          // 1. Lấy tất cả thẻ trong deck (hỗ trợ cả select và relation)
+          const allData = await notionQuery(token, cardDb, null, null);
+          const allCards = allData.results.map((p) => parseCard(p, PROP));
 
-          const cardsToDelete = data.results;
-          if (cardsToDelete.length === 0) {
-            return res.status(200).json({
-              ok: true,
-              deleted: 0,
-              message: "Không có thẻ nào trong bộ này",
-            });
-          }
-
-          // Xóa từng thẻ
-          for (const card of cardsToDelete) {
-            await fetch(`https://api.notion.com/v1/pages/${card.id}`, {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Notion-Version": "2022-06-28",
-              },
-            });
-            await new Promise((r) => setTimeout(r, 340)); // Tránh rate limit
-          }
-
-          let deletedLogs = 0;
-          if (logDb) {
-            // Với mỗi thẻ đã xóa, tìm và archive log liên quan
-            const cardIds = cardsToDelete.map((c) => c.id);
-            const logDeleteResults = await Promise.all(
-              cardIds.map(async (cardId) => {
-                try {
-                  const logData = await notionQuery(
-                    token,
-                    logDb,
-                    {
-                      property: LOG.card,
-                      relation: { contains: cardId },
-                    },
-                    null
-                  );
-                  await Promise.all(
-                    logData.results.map((l) =>
-                      fetch(`https://api.notion.com/v1/pages/${l.id}`, {
-                        method: "PATCH",
-                        headers: {
-                          Authorization: `Bearer ${token}`,
-                          "Notion-Version": "2022-06-28",
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ archived: true }),
-                      })
-                    )
-                  );
-                  return logData.results.length;
-                } catch (e) {
-                  return 0;
-                }
+          // Resolve deck names nếu là relation
+          const relCards = allCards.filter((c) => !c.deck && c.deckRelId);
+          if (relCards.length > 0) {
+            const relIds = [...new Set(relCards.map((c) => c.deckRelId))];
+            const nameMap = {};
+            await Promise.all(
+              relIds.map(async (id) => {
+                const name = await resolvePageTitle(token, id).catch(
+                  () => null
+                );
+                if (name) nameMap[id] = name;
               })
             );
-            deletedLogs = logDeleteResults.reduce((a, b) => a + b, 0);
+            allCards.forEach((c) => {
+              if (!c.deck && c.deckRelId) c.deck = nameMap[c.deckRelId] || null;
+            });
+          }
+
+          const targets = allCards.filter((c) => c.deck === deckName.trim());
+          if (targets.length === 0)
+            return res
+              .status(200)
+              .json({ ok: true, deleted: 0, deletedLogs: 0 });
+
+          const cardIds = targets.map((c) => c.id);
+
+          // 2. Archive tất cả thẻ song song
+          await Promise.all(
+            cardIds.map((id) =>
+              fetch(`https://api.notion.com/v1/pages/${id}`, {
+                method: "PATCH",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Notion-Version": "2022-06-28",
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ archived: true }),
+              })
+            )
+          );
+
+          // 3. Xóa toàn bộ log liên quan — query theo card relation
+          let deletedLogs = 0;
+          if (logDb) {
+            const logQueries = await Promise.all(
+              cardIds.map((cardId) =>
+                notionQuery(
+                  token,
+                  logDb,
+                  { property: LOG.card, relation: { contains: cardId } },
+                  null
+                ).catch(() => ({ results: [] }))
+              )
+            );
+            const allLogPages = logQueries.flatMap((r) => r.results);
+            // Dedup
+            const uniqueLogIds = [
+              ...new Map(allLogPages.map((l) => [l.id, l])).values(),
+            ].map((l) => l.id);
+            await Promise.all(
+              uniqueLogIds.map((id) =>
+                fetch(`https://api.notion.com/v1/pages/${id}`, {
+                  method: "PATCH",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Notion-Version": "2022-06-28",
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ archived: true }),
+                })
+              )
+            );
+            deletedLogs = uniqueLogIds.length;
           }
 
           return res.status(200).json({
             ok: true,
-            deleted: cardsToDelete.length,
+            deleted: cardIds.length,
             deletedLogs,
-            message: `Đã xóa ${cardsToDelete.length} thẻ và ${deletedLogs} bản ghi lịch sử của bộ "${deckName}"`,
+            message: `Đã xóa ${cardIds.length} thẻ và ${deletedLogs} log của bộ "${deckName}"`,
           });
         } catch (e) {
-          return res.status(500).json({
-            error: "Xóa bộ thẻ thất bại",
-            detail: e.message,
-          });
+          return res
+            .status(500)
+            .json({ error: "Xóa bộ thẻ thất bại", detail: e.message });
         }
       }
 

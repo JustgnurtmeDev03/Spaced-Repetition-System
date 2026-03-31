@@ -1611,138 +1611,236 @@
         display: block;
       }
 
-      /* ── REVIEW BACKGROUND ── */
-      #screen-review {
-        position: relative;
-        overflow: hidden;
-      }
-      .review-bg {
+      /* ══════════════════════════════════════════
+   GLOBAL BACKGROUND
+══════════════════════════════════════════ */
+      #global-bg {
         position: fixed;
         inset: 0;
         z-index: 0;
         pointer-events: none;
+        overflow: hidden;
       }
-      .review-bg img {
+      #global-bg-img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0.18;
-        filter: blur(1px) saturate(1.2);
-        transition: opacity 0.5s;
+        opacity: 0.15;
+        transition: opacity 0.6s ease;
+        display: none;
       }
-      .review-bg-overlay {
+      #global-bg-overlay {
         position: absolute;
         inset: 0;
-        /* gradient che phần trên để topbar dễ đọc, dần trong suốt ở giữa */
         background: linear-gradient(
-          to bottom,
-          var(--surface) 0%,
-          rgba(var(--bg-rgb, 248, 247, 244), 0.6) 25%,
-          transparent 55%,
-          rgba(var(--bg-rgb, 248, 247, 244), 0.7) 100%
+          160deg,
+          rgba(var(--bg-rgb, 248, 247, 244), 0.75) 0%,
+          rgba(var(--bg-rgb, 248, 247, 244), 0.45) 40%,
+          rgba(var(--bg-rgb, 248, 247, 244), 0.45) 60%,
+          rgba(var(--bg-rgb, 248, 247, 244), 0.8) 100%
         );
       }
-      .review-topbar,
-      .review-body {
+      /* Tất cả screen content đều nổi lên trên bg */
+      .screen > * {
         position: relative;
         z-index: 1;
       }
-      /* Dark mode override */
+      .topbar,
+      .review-topbar {
+        position: relative;
+        z-index: 2;
+      }
+
       @media (prefers-color-scheme: dark) {
-        .review-bg img {
-          opacity: 0.12;
+        #global-bg-img {
+          opacity: 0.1;
+        }
+        #global-bg-overlay {
+          background: linear-gradient(
+            160deg,
+            rgba(26, 25, 23, 0.82) 0%,
+            rgba(26, 25, 23, 0.5) 40%,
+            rgba(26, 25, 23, 0.5) 60%,
+            rgba(26, 25, 23, 0.85) 100%
+          );
         }
       }
 
-      /* ── BG PICKER BUTTON ── */
-      .bg-picker-btn {
+      /* ── BG PICKER TRIGGER (nút góc dưới phải) ── */
+      .bg-fab {
         position: fixed;
-        bottom: 1.25rem;
-        right: 1.25rem;
-        z-index: 10;
-        width: 40px;
-        height: 40px;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 50;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
         background: var(--surface);
         border: 0.5px solid var(--bd2);
-        color: var(--text2);
-        font-size: 18px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         cursor: pointer;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-        display: none;
+        display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 20px;
         transition: all 0.2s;
       }
-      .bg-picker-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-      }
-      #screen-review.active .bg-picker-btn {
-        display: flex;
+      .bg-fab:hover {
+        transform: scale(1.1) rotate(12deg);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
       }
 
-      /* ── BG PICKER PANEL ── */
-      .bg-picker-panel {
+      /* ── BG PICKER MODAL ── */
+      .bg-modal {
         position: fixed;
-        bottom: 4.5rem;
-        right: 1.25rem;
-        z-index: 10;
+        inset: 0;
+        z-index: 150;
+        display: none;
+        align-items: flex-end;
+        justify-content: flex-end;
+        padding: 1.5rem;
+      }
+      .bg-modal.show {
+        display: flex;
+      }
+      .bg-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(2px);
+      }
+      .bg-modal-panel {
+        position: relative;
+        z-index: 1;
         background: var(--surface);
         border: 0.5px solid var(--bd2);
         border-radius: var(--rl);
-        padding: 1rem;
-        width: 300px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-        display: none;
+        padding: 1.25rem;
+        width: 360px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+        animation: slideUp 0.2s ease;
       }
-      .bg-picker-panel.show {
-        display: block;
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
-      .bg-picker-title {
-        font-size: 11px;
-        font-weight: 500;
+      .bg-modal-title {
+        font-family: var(--card-font);
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .bg-section-label {
+        font-size: 10px;
+        font-weight: 600;
         color: var(--text3);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        margin-bottom: 0.75rem;
+        margin: 0.875rem 0 0.5rem;
       }
-      .bg-presets {
+      .bg-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
-        margin-bottom: 0.875rem;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 7px;
       }
-      .bg-preset {
-        aspect-ratio: 16/9;
-        border-radius: 6px;
+      .bg-thumb {
+        aspect-ratio: 16/10;
+        border-radius: 8px;
         overflow: hidden;
         cursor: pointer;
         border: 2px solid transparent;
-        transition: border-color 0.15s;
+        transition: all 0.15s;
+        position: relative;
       }
-      .bg-preset:hover,
-      .bg-preset.active {
+      .bg-thumb:hover {
+        border-color: var(--text3);
+        transform: scale(1.03);
+      }
+      .bg-thumb.active {
         border-color: var(--green);
       }
-      .bg-preset img {
+      .bg-thumb.active::after {
+        content: "✓";
+        position: absolute;
+        top: 4px;
+        right: 5px;
+        font-size: 11px;
+        font-weight: 700;
+        color: white;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+      }
+      .bg-thumb img {
         width: 100%;
         height: 100%;
         object-fit: cover;
       }
-      .bg-preset.none-preset {
+      .bg-thumb-none {
         background: var(--bg2);
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 3px;
         font-size: 18px;
-        border-color: var(--bd);
+        color: var(--text3);
+        border: 1.5px dashed var(--bd2);
+      }
+      .bg-thumb-none span {
+        font-size: 10px;
+        font-weight: 500;
+      }
+      .bg-user-slot {
+        background: var(--bg2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        font-size: 20px;
+        color: var(--text2);
+        border: 1.5px dashed var(--bd2);
+        cursor: pointer;
+        transition: all 0.15s;
+        position: relative;
+      }
+      .bg-user-slot:hover {
+        border-color: var(--purple);
+        color: var(--purple);
+        background: var(--purple-l);
+      }
+      .bg-user-slot span {
+        font-size: 9px;
+        font-weight: 500;
+        color: inherit;
+      }
+      .bg-user-slot input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .bg-opacity-wrap {
+        margin-top: 1rem;
+        padding-top: 0.875rem;
+        border-top: 0.5px solid var(--bd);
       }
       .bg-opacity-row {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-top: 0.75rem;
+        margin-top: 6px;
       }
       .bg-opacity-row label {
         font-size: 11px;
@@ -1752,9 +1850,14 @@
       .bg-opacity-row input {
         flex: 1;
         accent-color: var(--green);
+        cursor: pointer;
       }
-      .bg-upload-row {
-        margin-top: 0.75rem;
+      .bg-opacity-val {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text);
+        min-width: 32px;
+        text-align: right;
       }
 
       /* ── COLLAPSIBLE DECK ── */
@@ -1792,6 +1895,64 @@
     </style>
   </head>
   <body>
+    <!-- ── GLOBAL BACKGROUND ── -->
+    <div id="global-bg">
+      <img id="global-bg-img" src="" alt="" />
+      <div id="global-bg-overlay"></div>
+    </div>
+
+    <!-- ── BG FAB BUTTON ── -->
+    <button class="bg-fab" onclick="openBgModal()" title="Đổi background">
+      🎨
+    </button>
+
+    <!-- ── BG PICKER MODAL ── -->
+    <div class="bg-modal" id="bg-modal">
+      <div class="bg-modal-backdrop" onclick="closeBgModal()"></div>
+      <div class="bg-modal-panel">
+        <div class="bg-modal-title">
+          Tùy chỉnh Background
+          <button class="btn-icon" onclick="closeBgModal()">
+            <svg
+              viewBox="0 0 13 13"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            >
+              <path d="M1 1l11 11M12 1L1 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="bg-section-label">Ảnh mặc định</div>
+        <div class="bg-grid" id="bg-preset-grid"><!-- render by JS --></div>
+
+        <div class="bg-section-label">Ảnh / GIF của bạn</div>
+        <div class="bg-grid" id="bg-user-grid"><!-- render by JS --></div>
+
+        <div class="bg-opacity-wrap">
+          <div class="bg-section-label" style="margin-top: 0">
+            Độ trong suốt
+          </div>
+          <div class="bg-opacity-row">
+            <label>Mờ hơn</label>
+            <input
+              type="range"
+              min="4"
+              max="45"
+              step="1"
+              value="15"
+              id="bg-opacity-slider"
+              oninput="onBgOpacityChange(this.value)"
+            />
+            <label>Rõ hơn</label>
+            <span class="bg-opacity-val" id="bg-opacity-val">15%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══════════════════════════════════════════
      SCREEN 1: SETUP
 ══════════════════════════════════════════ -->
@@ -2793,6 +2954,7 @@
           });
         fetchCards();
       })();
+      initBgSystem();
 
       // ═══════════════════════════════════════════════════════════════════
       // TAB SYSTEM
@@ -3186,7 +3348,6 @@
         document.getElementById("deck-label").textContent =
           S.selectedDeck === "all" ? "Tất cả bộ thẻ" : S.selectedDeck;
         showCard(0);
-        initBg();
       }
 
       function showCard(i) {
@@ -4003,6 +4164,7 @@
 
       function goSetup() {
         showScreen("screen-setup");
+        S.allCards = [];
         if (!S.isDemo && S.cfg.token) {
           fetchCards(true); // ← force refresh để bộ thẻ vừa học biến mất
           S.allCards = []; // ← reset allCards để manage tab cũng tải lại
@@ -4217,125 +4379,259 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // REVIEW BACKGROUND
+      // GLOBAL BACKGROUND SYSTEM (với IndexedDB cho GIF lớn)
       // ═══════════════════════════════════════════════════════════════════
       const BG_PRESETS = [
-        // Thêm URL ảnh/GIF bạn muốn làm preset ở đây
-        // Format: { label: "tên", url: "https://..." }
-        // Ví dụ dùng unsplash (ảnh tĩnh đẹp, tải nhanh):
         {
-          label: "Rừng",
-          url: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=80",
+          id: "p1",
+          label: "Rừng xanh",
+          url: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1400&q=80",
         },
         {
-          label: "Biển",
-          url: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1200&q=80",
+          id: "p2",
+          label: "Đại dương",
+          url: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1400&q=80",
         },
         {
-          label: "Núi",
-          url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=80",
+          id: "p3",
+          label: "Núi tuyết",
+          url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1400&q=80",
         },
         {
+          id: "p4",
           label: "Hoa anh đào",
-          url: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1200&q=80",
+          url: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1400&q=80",
         },
         {
-          label: "Mưa",
-          url: "https://images.unsplash.com/photo-1428592953211-077101b2021b?w=1200&q=80",
-        },
-        {
+          id: "p5",
           label: "Thiên hà",
-          url: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1200&q=80",
+          url: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1400&q=80",
         },
         {
+          id: "p6",
           label: "Bãi biển",
-          url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80",
+          url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=80",
+        },
+        {
+          id: "p7",
+          label: "Rừng thu",
+          url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1400&q=80",
+        },
+        {
+          id: "p8",
+          label: "Hoàng hôn",
+          url: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=1400&q=80",
         },
       ];
 
-      let _bgCurrent = localStorage.getItem("srs_bg_url") || null;
-      let _bgOpacity = parseInt(localStorage.getItem("srs_bg_opacity") || "18");
+      // ─── IndexedDB helpers ───
+      const IDB_NAME = "srs_bg_store",
+        IDB_VER = 1,
+        IDB_STORE = "images";
 
-      function initBg() {
-        // Render presets
-        const container = document.getElementById("bg-presets");
-        container.innerHTML = `<div class="bg-preset none-preset ${
-          !_bgCurrent ? "active" : ""
-        }" onclick="setBg(null)">✕</div>`;
-        BG_PRESETS.forEach((p, i) => {
-          container.innerHTML += `
-      <div class="bg-preset ${
-        _bgCurrent === p.url ? "active" : ""
-      }" onclick="setBg('${p.url}', this)" title="${p.label}">
-        <img src="${p.url}" loading="lazy" alt="${p.label}"/>
-      </div>`;
+      function openBgIDB() {
+        return new Promise((res, rej) => {
+          const req = indexedDB.open(IDB_NAME, IDB_VER);
+          req.onupgradeneeded = (e) =>
+            e.target.result.createObjectStore(IDB_STORE);
+          req.onsuccess = (e) => res(e.target.result);
+          req.onerror = () => rej(req.error);
         });
+      }
+      async function idbSet(key, val) {
+        const db = await openBgIDB();
+        return new Promise((res, rej) => {
+          const tx = db.transaction(IDB_STORE, "readwrite");
+          tx.objectStore(IDB_STORE).put(val, key);
+          tx.oncomplete = () => res(true);
+          tx.onerror = () => rej(tx.error);
+        });
+      }
+      async function idbGet(key) {
+        const db = await openBgIDB();
+        return new Promise((res, rej) => {
+          const req = db
+            .transaction(IDB_STORE, "readonly")
+            .objectStore(IDB_STORE)
+            .get(key);
+          req.onsuccess = () => res(req.result || null);
+          req.onerror = () => rej(req.error);
+        });
+      }
+      async function idbGetAll() {
+        const db = await openBgIDB();
+        return new Promise((res, rej) => {
+          const store = db
+            .transaction(IDB_STORE, "readonly")
+            .objectStore(IDB_STORE);
+          const keys = [],
+            vals = [];
+          store.openKeyCursor().onsuccess = (e) => {
+            const c = e.target.result;
+            if (c) {
+              keys.push(c.key);
+              c.continue();
+            } else {
+              const gets = keys.map((k) => idbGet(k));
+              Promise.all(gets).then((vs) =>
+                res(keys.map((k, i) => ({ key: k, url: vs[i] })))
+              );
+            }
+          };
+          store.openKeyCursor().onerror = () => rej();
+        });
+      }
+      async function idbDelete(key) {
+        const db = await openBgIDB();
+        return new Promise((res, rej) => {
+          const tx = db.transaction(IDB_STORE, "readwrite");
+          tx.objectStore(IDB_STORE).delete(key);
+          tx.oncomplete = () => res(true);
+          tx.onerror = () => rej(tx.error);
+        });
+      }
+
+      // ─── State ───
+      let _bgActive = localStorage.getItem("srs_bg_id") || null; // id preset hoặc "user_xxx"
+      let _bgOpacity = parseInt(localStorage.getItem("srs_bg_opacity") || "15");
+
+      // ─── Apply background ───
+      async function applyBg(url) {
+        const img = document.getElementById("global-bg-img");
+        if (!url) {
+          img.style.display = "none";
+          img.src = "";
+          return;
+        }
+        img.style.display = "block";
+        img.style.opacity = _bgOpacity / 100;
+        img.src = url;
+      }
+
+      // ─── Init ───
+      async function initBgSystem() {
         document.getElementById("bg-opacity-slider").value = _bgOpacity;
         document.getElementById("bg-opacity-val").textContent =
           _bgOpacity + "%";
-        applyBg();
-      }
-
-      function applyBg() {
-        const img = document.getElementById("review-bg-img");
-        if (_bgCurrent) {
-          img.src = _bgCurrent;
-          img.style.display = "block";
-          img.style.opacity = _bgOpacity / 100;
-        } else {
-          img.style.display = "none";
+        await renderBgGrids();
+        // Áp dụng bg đã lưu
+        if (_bgActive) {
+          const preset = BG_PRESETS.find((p) => p.id === _bgActive);
+          if (preset) {
+            applyBg(preset.url);
+          } else {
+            // User image từ IDB
+            const data = await idbGet(_bgActive).catch(() => null);
+            if (data) applyBg(data);
+          }
         }
       }
 
-      function setBg(url, el) {
-        _bgCurrent = url;
-        localStorage.setItem("srs_bg_url", url || "");
-        // Update active state
-        document
-          .querySelectorAll(".bg-preset")
-          .forEach((p) => p.classList.remove("active"));
-        if (el) el.classList.add("active");
-        else document.querySelector(".none-preset")?.classList.add("active");
-        applyBg();
+      async function renderBgGrids() {
+        // Preset grid
+        const pg = document.getElementById("bg-preset-grid");
+        pg.innerHTML =
+          `
+    <div class="bg-thumb bg-thumb-none ${
+      !_bgActive ? "active" : ""
+    }" onclick="selectBg(null)">
+      <span>✕</span><span>Không có</span>
+    </div>` +
+          BG_PRESETS.map(
+            (p) => `
+      <div class="bg-thumb ${_bgActive === p.id ? "active" : ""}"
+        onclick="selectBg('${p.id}', '${p.url}')" title="${p.label}">
+        <img src="${p.url}" loading="lazy" alt="${p.label}"/>
+      </div>`
+          ).join("");
+
+        // User grid
+        const ug = document.getElementById("bg-user-grid");
+        let userImgs = [];
+        try {
+          userImgs = await idbGetAll();
+        } catch (e) {}
+        // Lọc chỉ giữ user images (key bắt đầu bằng "user_")
+        userImgs = userImgs.filter((x) => x.key.startsWith("user_"));
+
+        ug.innerHTML =
+          userImgs
+            .map(
+              (x) => `
+    <div class="bg-thumb ${_bgActive === x.key ? "active" : ""}"
+      onclick="selectBg('${x.key}', null, true)" style="position:relative">
+      <img src="${x.url}" alt="Ảnh của bạn"/>
+      <button onclick="event.stopPropagation();deleteUserBg('${x.key}')"
+        style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);color:white;border:none;font-size:10px;cursor:pointer;line-height:1">✕</button>
+    </div>`
+            )
+            .join("") +
+          `<div class="bg-thumb bg-user-slot" title="Tải ảnh hoặc GIF lên">
+      <input type="file" accept="image/*" onchange="handleBgUpload(this)"/>
+      📁<span>Tải lên</span>
+    </div>`;
       }
 
-      function setBgOpacity(val) {
-        _bgOpacity = parseInt(val);
-        localStorage.setItem("srs_bg_opacity", _bgOpacity);
-        document.getElementById("bg-opacity-val").textContent =
-          _bgOpacity + "%";
-        const img = document.getElementById("review-bg-img");
-        img.style.opacity = _bgOpacity / 100;
+      async function selectBg(id, url, fromIDB = false) {
+        _bgActive = id;
+        localStorage.setItem("srs_bg_id", id || "");
+        if (!id) {
+          applyBg(null);
+        } else if (fromIDB) {
+          const data = await idbGet(id).catch(() => null);
+          if (data) applyBg(data);
+        } else {
+          applyBg(url);
+        }
+        await renderBgGrids();
       }
 
-      function handleBgUpload(input) {
+      async function handleBgUpload(input) {
         const file = input.files?.[0];
         if (!file) return;
+        // Đọc file thành base64
         const reader = new FileReader();
-        reader.onload = (e) => {
-          const url = e.target.result; // base64 — chỉ dùng trong session này
-          setBg(url);
-          // Không lưu localStorage vì base64 quá nặng
-          toast("✓ Đã áp dụng ảnh của bạn (chỉ trong session này)");
+        reader.onload = async (e) => {
+          const dataUrl = e.target.result;
+          const key = "user_" + Date.now();
+          try {
+            await idbSet(key, dataUrl); // Lưu vào IndexedDB — hỗ trợ file lớn, GIF
+            toast("✓ Đã lưu ảnh vào thư viện");
+            await selectBg(key, null, true);
+          } catch (err) {
+            toast("Lỗi lưu ảnh: " + err.message);
+          }
+          input.value = ""; // reset để có thể chọn lại
         };
         reader.readAsDataURL(file);
       }
 
-      function toggleBgPicker() {
-        document.getElementById("bg-picker-panel").classList.toggle("show");
+      async function deleteUserBg(key) {
+        await idbDelete(key);
+        if (_bgActive === key) {
+          _bgActive = null;
+          localStorage.setItem("srs_bg_id", "");
+          applyBg(null);
+        }
+        await renderBgGrids();
+        toast("Đã xóa ảnh");
       }
 
-      // Đóng picker khi click ngoài
-      document.addEventListener("click", (e) => {
-        const panel = document.getElementById("bg-picker-panel");
-        const btn = document.querySelector(".bg-picker-btn");
-        if (
-          panel?.classList.contains("show") &&
-          !panel.contains(e.target) &&
-          !btn?.contains(e.target)
-        )
-          panel.classList.remove("show");
-      });
+      function onBgOpacityChange(val) {
+        _bgOpacity = parseInt(val);
+        localStorage.setItem("srs_bg_opacity", _bgOpacity);
+        document.getElementById("bg-opacity-val").textContent =
+          _bgOpacity + "%";
+        const img = document.getElementById("global-bg-img");
+        if (img.src) img.style.opacity = _bgOpacity / 100;
+      }
+
+      function openBgModal() {
+        document.getElementById("bg-modal").classList.add("show");
+      }
+      function closeBgModal() {
+        document.getElementById("bg-modal").classList.remove("show");
+      }
 
       // ═══════════════════════════════════════════════════════════════════
       // MANAGE TAB
@@ -4422,8 +4718,10 @@
         let html = "";
         Object.entries(deckMap).forEach(([deck, cards]) => {
           const ci = deckColorIndex(deck);
-          // Nhớ trạng thái collapsed — lưu trong S._collapsedDecks
-          const isCollapsed = (S._collapsedDecks || new Set()).has(deck);
+
+          if (!S._collapsedDecks)
+            S._collapsedDecks = new Set(Object.keys(deckMap)); // mặc định đóng hết
+          const isCollapsed = S._collapsedDecks.has(deck);
 
           html += `
       <div class="manage-deck-section${
@@ -4585,6 +4883,10 @@
           document.getElementById("edit-modal").classList.remove("show");
           renderManageList();
           renderDecks(S.cards);
+          updateSetupStats();
+          renderDeckSuggestions(
+            [...new Set(S.allCards.map((c) => c.deck).filter(Boolean))].sort()
+          );
         } catch (err) {
           showAlert("edit-alert", "error", err.message);
         }
@@ -4614,10 +4916,12 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok) throw new Error(data.error || "Lỗi xóa thẻ");
           S.cards = S.cards.filter((c) => c.id !== id);
-          S.allCards = S.allCards.filter((c) => c.id !== id);
+          S.allCards = (S.allCards || []).filter((c) => c.id !== id);
+          S.logs = (S.logs || []).filter((l) => l.cardRelId !== id);
           toast("✓ Đã xóa thẻ");
           renderManageList();
           renderDecks(S.cards);
+          updateSetupStats();
         } catch (err) {
           toast("Lỗi: " + err.message);
         }
@@ -4717,6 +5021,12 @@
 
           S.cards = S.cards.filter((c) => c.deck !== deckName);
           toast(`✓ Đã xóa bộ thẻ "${deckName}"`);
+          toast(`✓ ${data.message || "Đã xóa bộ thẻ"}`);
+          S.cards = S.cards.filter((c) => c.deck !== deckName);
+          S.allCards = (S.allCards || []).filter((c) => c.deck !== deckName);
+          S.logs = (S.logs || []).filter((l) => l.deck !== deckName);
+          S.logsLoaded = false; // force reload lịch sử lần sau
+
           renderManageList();
           renderDecks(S.cards);
           updateSetupStats();
