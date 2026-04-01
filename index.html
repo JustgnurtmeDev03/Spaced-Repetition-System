@@ -1625,20 +1625,11 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0.35; /* ← tăng từ 0.15 lên 0.35 */
-        transition: opacity 0.6s ease;
+
         display: none;
       }
       #global-bg-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          160deg,
-          rgba(248, 247, 244, 0.45) 0%,
-          rgba(248, 247, 244, 0.15) 35%,
-          rgba(248, 247, 244, 0.15) 65%,
-          rgba(248, 247, 244, 0.5) 100%
-        );
+        display: none;
       }
       /* Tất cả screen content đều nổi lên trên bg */
       .screen > * {
@@ -1652,17 +1643,8 @@
       }
 
       @media (prefers-color-scheme: dark) {
-        #global-bg-img {
-          opacity: 0.25;
-        } /* ← tăng từ 0.10 */
         #global-bg-overlay {
-          background: linear-gradient(
-            160deg,
-            rgba(26, 25, 23, 0.55) 0%,
-            rgba(26, 25, 23, 0.2) 35%,
-            rgba(26, 25, 23, 0.2) 65%,
-            rgba(26, 25, 23, 0.6) 100%
-          );
+          display: none;
         }
       }
 
@@ -1939,25 +1921,6 @@
           style="display: none"
           onchange="handleBgUpload(this)"
         />
-
-        <div class="bg-opacity-wrap">
-          <div class="bg-section-label" style="margin-top: 0">
-            Độ trong suốt
-          </div>
-          <div class="bg-opacity-row">
-            <label>Mờ hơn</label>
-            <input
-              type="range"
-              min="10"
-              max="70"
-              step="1"
-              value="35"
-              id="bg-opacity-slider"
-            />
-            <label>Rõ hơn</label>
-            <span class="bg-opacity-val" id="bg-opacity-val">15%</span>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -2274,113 +2237,51 @@
 
         <!-- ── TAB 3: HISTORY ── -->
         <div class="tab-content" id="tab-history">
-          <div class="history-stats" id="history-stats">
-            <div class="stat-box">
-              <div class="stat-val" id="hs-total" style="color: var(--purple)">
-                —
+          <div class="card" style="padding: 1.25rem; margin-bottom: 1rem">
+            <div class="history-stats" id="history-stats">
+              <div class="stat-box">
+                <div
+                  class="stat-val"
+                  id="hs-total"
+                  style="color: var(--purple)"
+                >
+                  —
+                </div>
+                <div class="stat-lbl">Tổng lượt review</div>
               </div>
-              <div class="stat-lbl">Tổng lượt review</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-val" id="hs-pass" style="color: var(--green)">
-                —
+              <div class="stat-box">
+                <div class="stat-val" id="hs-pass" style="color: var(--green)">
+                  —
+                </div>
+                <div class="stat-lbl">Trả lời đúng</div>
               </div>
-              <div class="stat-lbl">Trả lời đúng</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-val" id="hs-rate" style="color: var(--blue)">
-                —%
+              <div class="stat-box">
+                <div class="stat-val" id="hs-rate" style="color: var(--blue)">
+                  —%
+                </div>
+                <div class="stat-lbl">Retention rate</div>
               </div>
-              <div class="stat-lbl">Retention rate</div>
             </div>
-          </div>
 
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              margin-bottom: 0.875rem;
-              flex-wrap: wrap;
-              gap: 8px;
-            "
-          >
             <div
               style="
                 display: flex;
-                flex-direction: column;
-                gap: 10px;
+                align-items: center;
+                justify-content: space-between;
                 margin-bottom: 0.875rem;
+                flex-wrap: wrap;
+                gap: 8px;
               "
             >
-              <!-- Hàng 1: Lọc kết quả + Deck -->
               <div
                 style="
                   display: flex;
-                  align-items: center;
-                  gap: 8px;
-                  flex-wrap: wrap;
+                  flex-direction: column;
+                  gap: 10px;
+                  margin-bottom: 0.875rem;
                 "
               >
-                <span class="filter-label">Kết quả:</span>
-                <button
-                  class="filter-btn active"
-                  data-filter="all"
-                  onclick="setLogFilter('result',this)"
-                >
-                  Tất cả
-                </button>
-                <button
-                  class="filter-btn"
-                  data-filter="pass"
-                  onclick="setLogFilter('result',this)"
-                >
-                  ✓ Đúng
-                </button>
-                <button
-                  class="filter-btn"
-                  data-filter="fail"
-                  onclick="setLogFilter('result',this)"
-                >
-                  ✗ Sai
-                </button>
-
-                <span class="filter-label" style="margin-left: 8px"
-                  >Thời gian:</span
-                >
-                <button
-                  class="filter-btn"
-                  data-filter="today"
-                  onclick="setLogFilter('result',this)"
-                >
-                  Hôm nay
-                </button>
-                <button
-                  class="filter-btn"
-                  data-filter="week"
-                  onclick="setLogFilter('result',this)"
-                >
-                  7 ngày
-                </button>
-                <button
-                  class="filter-btn"
-                  data-filter="month"
-                  onclick="setLogFilter('result',this)"
-                >
-                  30 ngày
-                </button>
-              </div>
-
-              <!-- Hàng 2: Lọc Deck + Dedup + Refresh -->
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                  flex-wrap: wrap;
-                  justify-content: space-between;
-                "
-              >
+                <!-- Hàng 1: Lọc kết quả + Deck -->
                 <div
                   style="
                     display: flex;
@@ -2389,46 +2290,114 @@
                     flex-wrap: wrap;
                   "
                 >
-                  <span class="filter-label">Bộ thẻ:</span>
-                  <select
-                    class="form-select"
-                    id="log-deck-filter"
-                    style="
-                      padding: 4px 8px;
-                      font-size: 11px;
-                      width: auto;
-                      height: 28px;
-                    "
-                    onchange="setLogDeckFilter(this.value)"
+                  <span class="filter-label">Kết quả:</span>
+                  <button
+                    class="filter-btn active"
+                    data-filter="all"
+                    onclick="setLogFilter('result',this)"
                   >
-                    <option value="all">Tất cả</option>
-                  </select>
-
+                    Tất cả
+                  </button>
                   <button
                     class="filter-btn"
-                    id="dedupe-btn"
-                    onclick="toggleLogDedupe(this)"
-                    title="Chỉ hiển thị lần review cuối cùng của mỗi thẻ trong ngày"
+                    data-filter="pass"
+                    onclick="setLogFilter('result',this)"
                   >
-                    🎭 Gộp trùng
+                    ✓ Đúng
+                  </button>
+                  <button
+                    class="filter-btn"
+                    data-filter="fail"
+                    onclick="setLogFilter('result',this)"
+                  >
+                    ✗ Sai
+                  </button>
+
+                  <span class="filter-label" style="margin-left: 8px"
+                    >Thời gian:</span
+                  >
+                  <button
+                    class="filter-btn"
+                    data-filter="today"
+                    onclick="setLogFilter('result',this)"
+                  >
+                    Hôm nay
+                  </button>
+                  <button
+                    class="filter-btn"
+                    data-filter="week"
+                    onclick="setLogFilter('result',this)"
+                  >
+                    7 ngày
+                  </button>
+                  <button
+                    class="filter-btn"
+                    data-filter="month"
+                    onclick="setLogFilter('result',this)"
+                  >
+                    30 ngày
                   </button>
                 </div>
-                <button class="btn btn-sm" onclick="fetchLogs(true)">
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 14 14"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    style="vertical-align: middle; margin-right: 4px"
+
+                <!-- Hàng 2: Lọc Deck + Dedup + Refresh -->
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      flex-wrap: wrap;
+                    "
                   >
-                    <path d="M1 7a6 6 0 1 0 1.2-3.6" />
-                    <path d="M1 2v3h3" />
-                  </svg>
-                  Làm mới
-                </button>
+                    <span class="filter-label">Bộ thẻ:</span>
+                    <select
+                      class="form-select"
+                      id="log-deck-filter"
+                      style="
+                        padding: 4px 8px;
+                        font-size: 11px;
+                        width: auto;
+                        height: 28px;
+                      "
+                      onchange="setLogDeckFilter(this.value)"
+                    >
+                      <option value="all">Tất cả</option>
+                    </select>
+
+                    <button
+                      class="filter-btn"
+                      id="dedupe-btn"
+                      onclick="toggleLogDedupe(this)"
+                      title="Chỉ hiển thị lần review cuối cùng của mỗi thẻ trong ngày"
+                    >
+                      🎭 Gộp trùng
+                    </button>
+                  </div>
+                  <button class="btn btn-sm" onclick="refreshHistoryTab()">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      style="vertical-align: middle; margin-right: 4px"
+                    >
+                      <path d="M1 7a6 6 0 1 0 1.2-3.6" />
+                      <path d="M1 2v3h3" />
+                    </svg>
+                    Làm mới
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2457,17 +2426,21 @@
 
         <!-- ── TAB: MANAGE ── -->
         <div class="tab-content" id="tab-manage">
-          <div class="manage-search">
-            <input
-              class="form-input"
-              type="text"
-              id="manage-search"
-              placeholder="Tìm thẻ theo nội dung, deck, tags…"
-              oninput="renderManageList()"
-            />
-            <button class="btn btn-sm" onclick="renderManageList()">Tìm</button>
+          <div class="card" style="padding: 1.25rem">
+            <div class="manage-search">
+              <input
+                class="form-input"
+                type="text"
+                id="manage-search"
+                placeholder="Tìm thẻ theo nội dung, deck, tags…"
+                oninput="renderManageList()"
+              />
+              <button class="btn btn-sm" onclick="renderManageList()">
+                Tìm
+              </button>
+            </div>
+            <div id="manage-list"></div>
           </div>
-          <div id="manage-list"></div>
         </div>
 
         <!-- Edit Card Modal -->
@@ -2887,6 +2860,7 @@
         limit: 20,
         cfg: {},
         isDemo: false,
+        pendingSync: [],
         logs: [],
         logsFiltered: [],
         logFilter: "all",
@@ -3332,9 +3306,25 @@
         )}`;
         document.getElementById("r-status-badge").textContent =
           card.status || "New";
-        document.getElementById("r-tags").textContent = card.tags?.length
-          ? card.tags.slice(0, 2).join(" · ")
-          : "No tags";
+        const tagsEl = document.getElementById("r-tags");
+        if (card.tags?.length) {
+          // Hiển thị dạng badges thay vì text phẳng
+          tagsEl.innerHTML = card.tags
+            .map(
+              (
+                t
+              ) => `<span style="display:inline-block;padding:1px 7px;background:var(--bg2);
+      border-radius:999px;font-size:10px;margin:0 2px 2px 0;white-space:nowrap">
+      ${escHtml(t)}</span>`
+            )
+            .join("");
+          tagsEl.style.display = "flex";
+          tagsEl.style.flexWrap = "wrap";
+          tagsEl.style.gap = "2px";
+        } else {
+          tagsEl.textContent = "No tags";
+          tagsEl.style.display = "";
+        }
         const pct = Math.round((i / S.queue.length) * 100);
         document.getElementById("progress-fill").style.width = pct + "%";
         document.getElementById("card-counter").textContent = `${i + 1} / ${
@@ -3403,13 +3393,22 @@
         document.querySelectorAll(".rb")[q]?.classList.add("pressed");
         const card = S.current;
         const result = sm2(card, q);
+        result.oldEf = card.ef;
+        result.oldInterval = card.interval;
+        result.oldReps = card.reps;
         card.ef = result.newEf;
         card.interval = result.newInterval;
         card.reps = result.newReps;
         S.results.push({ card, q, pass: result.pass, result });
         if (result.pass) S.passCount++;
         else S.failCount++;
-        if (!S.isDemo) syncCard(card, q, result); // fire-and-forget, không chặn UI
+
+        // KHÔNG sync ngay — lưu vào hàng chờ, chỉ sync khi endSession()
+        if (!S.isDemo) {
+          S.pendingSync = S.pendingSync || [];
+          S.pendingSync.push({ card, q, result });
+        }
+
         setTimeout(() => {
           document.getElementById("card-body").classList.remove("flipped");
           document.getElementById("rating-panel").classList.remove("visible");
@@ -3492,6 +3491,13 @@
       // END SESSION
       // ═══════════════════════════════════════════════════════════════════
       function endSession() {
+        // ── Sync tất cả thẻ đã ôn lên Notion (chỉ khi hoàn thành đúng nghĩa) ──
+        if (!S.isDemo && S.pendingSync?.length) {
+          const pending = [...S.pendingSync];
+          S.pendingSync = [];
+          // Sync ngầm — không await để không chặn UI
+          pending.forEach(({ card, q, result }) => syncCard(card, q, result));
+        }
         showScreen("screen-done");
         const total = S.results.length,
           pass = S.passCount,
@@ -3548,6 +3554,8 @@
         });
         // Mark logs as stale so they refresh on next view
         S.logsLoaded = false;
+        S.logs = [];
+        S.logsFiltered = [];
         if (!S.isDemo)
           document.getElementById("sync-status-done").textContent =
             "✓ Dữ liệu đã được đồng bộ lên Notion";
@@ -4005,7 +4013,7 @@
 
         document.getElementById("log-container").innerHTML = `
     <div class="log-table-wrap">
-      <table class="log-table">
+      <table class="log-table" >
         <thead><tr>
           <th>Ngày</th><th>Thẻ</th><th>Deck</th><th>Rating</th><th>Kết quả</th><th>Interval mới</th>
         </tr></thead>
@@ -4142,7 +4150,17 @@
       }
 
       function exitSession() {
-        if (confirm("Thoát session? Tiến độ sẽ không được lưu.")) goSetup();
+        if (confirm("Thoát session? Tiến độ sẽ không được lưu.")) {
+          S.pendingSync = []; // Xóa toàn bộ hàng chờ — không ghi gì lên Notion
+          // Khôi phục lại dữ liệu thẻ về trạng thái ban đầu (trước khi ôn)
+          S.results.forEach(({ card, result }) => {
+            // Revert SM-2 changes
+            card.ef = result.oldEf ?? card.ef;
+            card.interval = result.oldInterval ?? card.interval;
+            card.reps = result.oldReps ?? card.reps;
+          });
+          goSetup();
+        }
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -4333,6 +4351,15 @@
             .join("");
       }
 
+      async function refreshHistoryTab() {
+        S.logsLoaded = false;
+        S.logs = [];
+        S.logsFiltered = [];
+        await fetchLogs(true);
+        populateLogDeckFilter(S.logs);
+        toast("✓ Đã làm mới lịch sử");
+      }
+
       // ═══════════════════════════════════════════════════════════════════
       // GLOBAL BACKGROUND SYSTEM (với IndexedDB cho GIF lớn)
       // ═══════════════════════════════════════════════════════════════════
@@ -4430,7 +4457,7 @@
 
       // ─── State ───
       let _bgActive = localStorage.getItem("srs_bg_id") || null; // id preset hoặc "user_xxx"
-      let _bgOpacity = parseInt(localStorage.getItem("srs_bg_opacity") || "35");
+      let _bgOpacity = parseInt(localStorage.getItem("srs_bg_opacity") || "55");
 
       // ─── Apply background ───
       async function applyBg(url) {
@@ -4441,7 +4468,7 @@
           return;
         }
         img.style.display = "block";
-        img.style.opacity = _bgOpacity / 100;
+
         img.src = url;
       }
       // ─── Init ───
