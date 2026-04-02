@@ -180,33 +180,69 @@
         height: 14px;
       }
 
-      /* ── STATUS DOT ── */
+      /* ── STATUS PILL ── */
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px 4px 8px;
+        border-radius: 999px;
+        border: 0.5px solid var(--bd2);
+        background: var(--bg2);
+        font-size: 11.5px;
+        font-weight: 500;
+        color: var(--text2);
+        letter-spacing: 0.01em;
+        transition: background 0.3s, border-color 0.3s, color 0.3s;
+        cursor: default;
+        white-space: nowrap;
+      }
+      .status-pill.ok {
+        background: var(--green-l);
+        border-color: rgba(29, 158, 117, 0.35);
+        color: var(--green-d);
+      }
+      .status-pill.err {
+        background: var(--red-l);
+        border-color: rgba(226, 75, 74, 0.35);
+        color: var(--red-d);
+      }
+      .status-pill.loading {
+        background: var(--amber-l);
+        border-color: rgba(239, 159, 39, 0.35);
+        color: var(--amber-d);
+      }
+      @media (prefers-color-scheme: dark) {
+        .status-pill { background: var(--bg3); }
+        .status-pill.ok { background: rgba(29, 158, 117, 0.15); border-color: rgba(29, 158, 117, 0.3); color: #3ec99a; }
+        .status-pill.err { background: rgba(226, 75, 74, 0.15); border-color: rgba(226, 75, 74, 0.3); color: #f07070; }
+        .status-pill.loading { background: rgba(239, 159, 39, 0.15); border-color: rgba(239, 159, 39, 0.3); color: #f5b84a; }
+      }
+      /* ── STATUS DOT (inside pill) ── */
       .sdot {
-        width: 7px;
-        height: 7px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
-        background: var(--bd2);
+        background: var(--text3);
         flex-shrink: 0;
         transition: background 0.3s;
       }
-      .sdot.ok {
+      .status-pill.ok .sdot {
         background: var(--green);
+        box-shadow: 0 0 0 2px rgba(29, 158, 117, 0.25);
       }
-      .sdot.err {
+      .status-pill.err .sdot {
         background: var(--red);
+        box-shadow: 0 0 0 2px rgba(226, 75, 74, 0.25);
       }
-      .sdot.loading {
+      .status-pill.loading .sdot {
         background: var(--amber);
+        box-shadow: 0 0 0 2px rgba(239, 159, 39, 0.25);
         animation: blink 1s infinite;
       }
       @keyframes blink {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.3;
-        }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
       }
 
       /* ── PAGE CONTAINER ── */
@@ -1011,15 +1047,31 @@
         background: var(--surface);
         border: 0.5px solid var(--bd2);
         border-radius: var(--rl);
-        padding: 3rem 2.5rem;
+        padding: 2.5rem 2.5rem;
         min-height: 300px;
+        max-height: clamp(320px, 56vh, 540px);
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
         position: relative;
+        /* Scrollbar tinh tế */
+        scrollbar-width: thin;
+        scrollbar-color: var(--bd2) transparent;
       }
+      .card-face::-webkit-scrollbar {
+        width: 4px;
+      }
+      .card-face::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .card-face::-webkit-scrollbar-thumb {
+        background: var(--bd2);
+        border-radius: 2px;
+      }
+      /* Khi nội dung dài, chuyển về flex-start để scroll từ trên xuống */
       .card-face.back {
         position: absolute;
         top: 0;
@@ -1028,6 +1080,22 @@
         bottom: 0;
         transform: rotateX(180deg);
         background: var(--bg2);
+        justify-content: flex-start;
+        padding-top: 2.75rem;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--bd2) transparent;
+      }
+      .card-face.back::-webkit-scrollbar {
+        width: 4px;
+      }
+      .card-face.back::-webkit-scrollbar-thumb {
+        background: var(--bd2);
+        border-radius: 2px;
+      }
+      /* card-body giữ chiều cao ổn định */
+      .card-body {
+        min-height: 300px;
       }
       .card-face-label {
         position: absolute;
@@ -2066,15 +2134,7 @@
           SRS Review
         </div>
         <div style="display: flex; align-items: center; gap: 8px">
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              gap: 6px;
-              font-size: 12px;
-              color: var(--text2);
-            "
-          >
+          <div class="status-pill" id="status-pill">
             <div class="sdot" id="sdot"></div>
             <span id="stext">Chưa kết nối</span>
           </div>
@@ -4312,7 +4372,9 @@
       // STATUS + TOAST + ALERT
       // ═══════════════════════════════════════════════════════════════════
       function setStatus(type, msg) {
-        document.getElementById("sdot").className = "sdot " + type;
+        document.getElementById("sdot").className = "sdot";
+        const pill = document.getElementById("status-pill");
+        pill.className = "status-pill" + (type ? " " + type : "");
         document.getElementById("stext").textContent = msg;
       }
 
@@ -5312,15 +5374,21 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok) throw new Error(data.error || "Lỗi đổi tên");
 
-          // Update local state
+          // Update local state — cards + allCards
           cardsInDeck.forEach((c) => (c.deck = newName));
-          toast(`✓ Đã đổi "${_renameDeckOld}" → "${newName}"`);
+          (S.allCards || [])
+            .filter((c) => c.deck === _renameDeckOld)
+            .forEach((c) => (c.deck = newName));
+
+          // Đóng modal & cập nhật UI ngay lập tức
           document.getElementById("rename-modal").classList.remove("show");
           renderManageList();
           renderDecks(S.cards);
           renderDeckSuggestions(
-            [...new Set(S.cards.map((c) => c.deck).filter(Boolean))].sort()
+            [...new Set(S.allCards.map((c) => c.deck).filter(Boolean))].sort()
           );
+          updateSetupStats();
+          toast(`✓ Đã đổi "${_renameDeckOld}" → "${newName}"`);
         } catch (err) {
           showAlert("rename-alert", "error", err.message);
         }
@@ -5355,17 +5423,20 @@
           if (!res.ok || !data.ok)
             throw new Error(data.error || "Lỗi xóa bộ thẻ");
 
-          S.cards = S.cards.filter((c) => c.deck !== deckName);
-          toast(`✓ Đã xóa bộ thẻ "${deckName}"`);
-          toast(`✓ ${data.message || "Đã xóa bộ thẻ"}`);
+          // Cập nhật state ngay lập tức — xóa duplicate code
           S.cards = S.cards.filter((c) => c.deck !== deckName);
           S.allCards = (S.allCards || []).filter((c) => c.deck !== deckName);
           S.logs = (S.logs || []).filter((l) => l.deck !== deckName);
-          S.logsLoaded = false; // force reload lịch sử lần sau
+          S.logsLoaded = false;
 
+          // Re-render ngay
           renderManageList();
           renderDecks(S.cards);
           updateSetupStats();
+          renderDeckSuggestions(
+            [...new Set((S.allCards || []).map((c) => c.deck).filter(Boolean))].sort()
+          );
+          toast(`✓ Đã xóa bộ thẻ "${deckName}"`);
         } catch (err) {
           toast("Lỗi: " + err.message);
         }
