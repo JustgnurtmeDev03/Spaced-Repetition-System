@@ -1078,18 +1078,63 @@
 
       .card-rendered {
         font-family: var(--card-font);
-        font-size: 24px;
+        font-size: 18px;
         line-height: 1.85;
         color: var(--text);
-        max-width: 560px;
+        max-width: 580px;
+        width: 100%;
         text-align: left;
         word-break: break-word;
       }
       .card-rendered p {
-        margin-bottom: 0.6em;
+        margin-bottom: 0.7em;
       }
       .card-rendered p:last-child {
         margin-bottom: 0;
+      }
+      .card-rendered p.card-intro {
+        font-weight: 500;
+        margin-bottom: 0.6em;
+        color: var(--text);
+      }
+      .card-rendered p.card-conclusion {
+        margin-top: 0.6em;
+        padding-top: 0.5em;
+        border-top: 0.5px solid var(--bd);
+        font-style: italic;
+        color: var(--text2);
+      }
+      .card-rendered ol {
+        padding-left: 1.5em;
+        margin: 0.3em 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+      }
+      .card-rendered ul {
+        padding-left: 1.5em;
+        margin: 0.3em 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4em;
+      }
+      .card-rendered li {
+        line-height: 1.7;
+      }
+      .card-rendered strong {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .card-rendered .dash-item {
+        display: flex;
+        gap: 0.6em;
+        align-items: flex-start;
+        margin-bottom: 0.4em;
+      }
+      .card-rendered .dash-item::before {
+        content: "—";
+        color: var(--text3);
+        flex-shrink: 0;
       }
       .card-rendered ol,
       .card-rendered ul {
@@ -4366,56 +4411,206 @@
       function formatCardText(raw) {
         if (!raw) return "";
         const text = raw.trim();
-        const lines = text.split("\n").filter((l) => l.trim() !== "");
+        if (!text) return "";
 
-        // Nếu chỉ 1 dòng → wrap vào p, không cần list
-        if (lines.length === 1) {
-          return `<p>${escHtml(lines[0])}</p>`;
+        // ── BƯỚC 1: Chuẩn hoá — replace literal \n (escaped) thành newline thật
+        const normalized = text
+          .replace(/\\n/g, "\n")
+          .replace(/\r\n/g, "\n")
+          .replace(/\r/g, "\n")
+          .replace(/\n{3,}/g, "\n\n");
+
+        // ── BƯỚC 2: Nếu có newline thật → xử lý từng dòng
+        const lines = normalized
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l);
+
+        if (lines.length > 1) {
+          return processLines(lines);
         }
 
+        // ── BƯỚC 3: Chỉ 1 dòng dài → smart split
+        return smartSplitSingleParagraph(normalized);
+      }
+
+      // ─── Xử lý nhiều dòng ───────────────────────────────────────────────────
+      function processLines(lines) {
         let html = "";
-        let inOl = false;
+        let olItems = [];
+        let ulItems = [];
 
-        lines.forEach((line, i) => {
-          const trimmed = line.trim();
-
-          // Numbered list: "1.", "2.", "1)", "2)"
-          const numMatch = trimmed.match(/^(\d+)[.)]\s+(.+)$/);
-          if (numMatch) {
-            if (!inOl) {
-              html += "<ol>";
-              inOl = true;
-            }
-            html += `<li>${escHtml(numMatch[2])}</li>`;
-            return;
+        function flushOl() {
+          if (olItems.length) {
+            html += `<ol>${olItems.map((x) => `<li>${x}</li>`).join("")}</ol>`;
+            olItems = [];
           }
+        }
+        function flushUl() {
+          if (ulItems.length) {
+            html += `<ul>${ulItems.map((x) => `<li>${x}</li>`).join("")}</ul>`;
+            ulItems = [];
+          }
+        }
 
-          // Đóng ol nếu đang mở và dòng này không phải numbered
-          if (inOl) {
-            html += "</ol>";
-            inOl = false;
+        lines.forEach((line) => {
+          const t = line.trim();
+
+          // Numbered: "1.", "2.", "1)", "(1)"
+          const numMatch = t.match(/^(?:\((\d+)\)|(\d+)[.):])\s*(.+)$/);
+          if (numMatch) {
+            flushUl();
+            olItems.push(escHtml(numMatch[3]));
+            return;
           }
 
           // Bullet: "- ", "• ", "* "
-          const bulletMatch = trimmed.match(/^[-•*]\s+(.+)$/);
+          const bulletMatch = t.match(/^[-•*]\s+(.+)$/);
           if (bulletMatch) {
-            html += `<ul><li>${escHtml(bulletMatch[1])}</li></ul>`;
+            flushOl();
+            ulItems.push(escHtml(bulletMatch[1]));
             return;
           }
 
-          // Dòng bắt đầu bằng "— " (em dash)
-          const dashMatch = trimmed.match(/^—\s*(.+)$/);
+          // Em dash list "— "
+          const dashMatch = t.match(/^—\s+(.+)$/);
           if (dashMatch) {
+            flushOl();
+            flushUl();
             html += `<div class="dash-item">${escHtml(dashMatch[1])}</div>`;
             return;
           }
 
-          // Dòng bình thường → paragraph
-          html += `<p>${escHtml(trimmed)}</p>`;
+          // Dòng bình thường
+          flushOl();
+          flushUl();
+          html += `<p>${formatInline(t)}</p>`;
         });
 
-        if (inOl) html += "</ol>";
+        flushOl();
+        flushUl();
         return html;
+      }
+
+      // ─── Smart split 1 đoạn dài không có newline ────────────────────────────
+      function smartSplitSingleParagraph(text) {
+        // Pattern A: "(1) ... (2) ... (3) ..." — numbered in parens
+        if (/\(\d+\)\s/.test(text) && text.match(/\(\d+\)/g)?.length >= 2) {
+          const parts = text.split(/(?=\(\d+\)\s)/);
+          let html = "";
+          let intro = "";
+          const listItems = [];
+
+          parts.forEach((part) => {
+            const numMatch = part.match(/^\((\d+)\)\s(.+)$/s);
+            if (numMatch) {
+              listItems.push(numMatch[2].trim());
+            } else if (part.trim()) {
+              intro = part.trim();
+            }
+          });
+
+          // Tách "Nguyên tắc:" hoặc kết luận ra khỏi item cuối nếu có
+          let conclusion = "";
+          if (listItems.length > 0) {
+            const lastItem = listItems[listItems.length - 1];
+            const concMatch = lastItem.match(
+              /^(.*?)\.\s+(Nguyên tắc|Lưu ý|Kết luận|Note|Key)[:：]\s*(.+)$/is
+            );
+            if (concMatch) {
+              listItems[listItems.length - 1] = concMatch[1] + ".";
+              conclusion = `${concMatch[2]}: ${concMatch[3]}`;
+            }
+          }
+
+          if (intro) html += `<p class="card-intro">${formatInline(intro)}</p>`;
+          if (listItems.length)
+            html += `<ol>${listItems
+              .map((x) => `<li>${formatInline(x)}</li>`)
+              .join("")}</ol>`;
+          if (conclusion)
+            html += `<p class="card-conclusion">${formatInline(
+              conclusion
+            )}</p>`;
+          return html || `<p>${formatInline(text)}</p>`;
+        }
+
+        // Pattern B: "1. ... 2. ... 3. ..." — numbered with dot/colon inline
+        if (
+          /\b\d+[.)]\s/.test(text) &&
+          text.match(/\b\d+[.)]\s/g)?.length >= 2
+        ) {
+          const parts = text.split(/(?=\b\d+[.)]\s)/);
+          let html = "";
+          let intro = "";
+          const listItems = [];
+
+          parts.forEach((part) => {
+            const numMatch = part.match(/^\d+[.)]\s(.+)$/s);
+            if (numMatch) listItems.push(numMatch[1].trim());
+            else if (part.trim()) intro = part.trim();
+          });
+
+          if (intro) html += `<p class="card-intro">${formatInline(intro)}</p>`;
+          if (listItems.length)
+            html += `<ol>${listItems
+              .map((x) => `<li>${formatInline(x)}</li>`)
+              .join("")}</ol>`;
+          return html || `<p>${formatInline(text)}</p>`;
+        }
+
+        // Pattern C: Văn bản dài ≥ 180 ký tự — tách theo câu để dễ đọc
+        if (text.length >= 180) {
+          // Tách tại ". " hoặc ". \n" trước chữ in hoa hoặc tên riêng
+          const sentences = splitIntoSentences(text);
+          if (sentences.length > 1) {
+            return sentences.map((s) => `<p>${formatInline(s)}</p>`).join("");
+          }
+        }
+
+        // Ngắn hoặc không nhận dạng được → 1 paragraph
+        return `<p>${formatInline(text)}</p>`;
+      }
+
+      // ─── Tách thành câu thông minh ───────────────────────────────────────────
+      function splitIntoSentences(text) {
+        // Tách sau dấu "." / "!" / "?" / "→" / "—" theo sau bởi khoảng trắng + chữ
+        const parts = text
+          .split(/(?<=[.!?])\s+(?=[^\s\d])/g) // sau dấu câu + khoảng trắng
+          .flatMap((p) => p.split(/\s+(?=→\s)/)) // tách tại "→"
+          .map((p) => p.trim())
+          .filter((p) => p.length > 0);
+
+        // Gộp câu quá ngắn (< 30 ký tự) với câu kế tiếp
+        const merged = [];
+        let buf = "";
+        parts.forEach((p) => {
+          if (buf) {
+            buf += " " + p;
+            if (buf.length >= 60) {
+              merged.push(buf);
+              buf = "";
+            }
+          } else {
+            if (p.length < 30 && merged.length === 0) buf = p;
+            else merged.push(p);
+          }
+        });
+        if (buf) {
+          if (merged.length > 0) merged[merged.length - 1] += " " + buf;
+          else merged.push(buf);
+        }
+        return merged.length >= 2 ? merged : [text];
+      }
+
+      // ─── Format inline: bold **text**, → arrow ──────────────────────────────
+      function formatInline(text) {
+        return escHtml(text)
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(
+            /→/g,
+            '<span style="color:var(--text3);font-weight:500">→</span>'
+          );
       }
 
       // ── Free Study Mode ──

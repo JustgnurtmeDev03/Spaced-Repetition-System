@@ -910,7 +910,14 @@ function parseCard(page, PROP) {
 function getText(prop) {
   if (!prop) return "";
   if (prop.title) return prop.title.map((t) => t.plain_text).join("");
-  if (prop.rich_text) return prop.rich_text.map((t) => t.plain_text).join("");
+  if (prop.rich_text) {
+    // Notion chia rich_text thành nhiều block khi có style khác nhau.
+    // Giữ \n có sẵn trong plain_text, các block liền nhau join không có khoảng cách thừa.
+    return prop.rich_text
+      .map((t) => t.plain_text)
+      .join("") // ← giữ nguyên join("") vì \n đã nằm trong plain_text rồi
+      .replace(/\n{3,}/g, "\n\n"); // chuẩn hoá: max 2 newline liên tiếp
+  }
   return "";
 }
 
