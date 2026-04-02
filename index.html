@@ -943,12 +943,13 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        padding: 1.5rem 2rem;
-        gap: 1.5rem;
+        justify-content: flex-start;
+        padding: 1.25rem 2rem 2rem;
+        gap: 1rem;
         max-width: 1000px;
         margin: 0 auto;
         width: 100%;
+        overflow-y: auto;
       }
 
       .card-meta-row {
@@ -989,6 +990,76 @@
         color: var(--text3);
       }
 
+      #screen-review {
+        overflow-y: auto;
+        height: 100vh;
+      }
+
+      /* ── DECK TREE ── */
+      .deck-parent-group {
+        margin-bottom: 6px;
+      }
+      .deck-parent-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--r);
+        border: 1.5px solid var(--bd);
+        background: var(--bg);
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: var(--ui-font);
+        margin-bottom: 4px;
+      }
+      .deck-parent-header:hover {
+        border-color: var(--bd2);
+        background: var(--surface);
+      }
+      .deck-parent-header.sel {
+        border-color: var(--green);
+        background: var(--green-l);
+      }
+      .deck-parent-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        flex: 1;
+      }
+      .deck-parent-count {
+        font-size: 11px;
+        color: var(--text2);
+      }
+      .deck-parent-chevron {
+        font-size: 10px;
+        color: var(--text3);
+        transition: transform 0.2s;
+      }
+      .deck-parent-group.expanded .deck-parent-chevron {
+        transform: rotate(90deg);
+      }
+      .deck-children {
+        display: none;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        padding-left: 14px;
+        margin-bottom: 4px;
+      }
+      .deck-parent-group.expanded .deck-children {
+        display: grid;
+      }
+      .deck-btn.sub {
+        border-width: 1px;
+        padding: 0.6rem 0.75rem;
+      }
+      .deck-btn.sub .deck-name {
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .deck-btn.sub .deck-count {
+        font-size: 10px;
+      }
+
       /* The card */
       .card-scene {
         width: 100%;
@@ -1005,29 +1076,32 @@
       .card-body.flipped {
         transform: rotateX(180deg);
       }
+
       .card-face {
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
         background: var(--surface);
         border: 0.5px solid var(--bd2);
         border-radius: var(--rl);
-        padding: 3rem 2.5rem;
-        min-height: 300px;
+        padding: 3rem 2.5rem 2.5rem;
+        min-height: 260px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
         position: relative;
+        width: 100%;
+        box-sizing: border-box;
       }
       .card-face.back {
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        bottom: 0;
-        transform: rotateX(180deg);
+        min-height: 100%;
         background: var(--bg2);
+        overflow: visible;
       }
       .card-face-label {
         position: absolute;
@@ -1081,10 +1155,11 @@
         font-size: 18px;
         line-height: 1.85;
         color: var(--text);
-        max-width: 580px;
         width: 100%;
+        max-width: 680px;
         text-align: left;
         word-break: break-word;
+        overflow-wrap: break-word;
       }
       .card-rendered p {
         margin-bottom: 0.7em;
@@ -1189,6 +1264,38 @@
       .flip-prompt.hidden {
         opacity: 0;
         pointer-events: none;
+      }
+
+      /* Status badge màu theo trạng thái */
+      .status-badge {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1.5px solid transparent;
+        flex-shrink: 0;
+      }
+      .status-badge.s-new {
+        background: var(--blue-l);
+        color: var(--blue-d);
+        border-color: rgba(55, 138, 221, 0.3);
+      }
+      .status-badge.s-learning {
+        background: var(--amber-l);
+        color: var(--amber-d);
+        border-color: rgba(239, 159, 39, 0.35);
+      }
+      .status-badge.s-review {
+        background: var(--purple-l);
+        color: var(--purple-d);
+        border-color: rgba(127, 119, 221, 0.3);
+      }
+      .status-badge.s-mastered {
+        background: var(--green-l);
+        color: var(--green-d);
+        border-color: rgba(29, 158, 117, 0.3);
       }
 
       /* Rating panel */
@@ -2736,7 +2843,7 @@
         <div class="card-meta-row">
           <div class="card-deck-pill" id="r-deck">—</div>
           <div class="card-tag-pill" id="r-tags">—</div>
-          <div class="card-num" id="r-status-badge">New</div>
+          <div class="status-badge s-new" id="r-status-badge">New</div>
         </div>
 
         <div class="card-scene" onclick="flipCard()" id="card-scene">
@@ -3000,6 +3107,7 @@
         logDedupe: false,
         importData: [],
         _collapsedDecks: null,
+        _expandedParents: null,
       };
 
       // ═══════════════════════════════════════════════════════════════════
@@ -3334,11 +3442,33 @@
       }
 
       function renderDecks(cards) {
-        const deckNames = [
-          ...new Set(cards.map((c) => c.deck).filter(Boolean)),
-        ].sort();
         const grid = document.getElementById("deck-grid");
         grid.innerHTML = "";
+
+        // Lấy tất cả deck names
+        const allDeckNames = [
+          ...new Set(cards.map((c) => c.deck).filter(Boolean)),
+        ].sort();
+
+        // Phân loại: deck cha và deck con (dùng " / " làm separator)
+        const parents = {}; // { parentName: { count, children: { subName: count } } }
+        const solos = []; // deck không có parent
+
+        allDeckNames.forEach((name) => {
+          const slashIdx = name.indexOf(" / ");
+          if (slashIdx !== -1) {
+            const parent = name.substring(0, slashIdx).trim();
+            const child = name.substring(slashIdx + 3).trim();
+            if (!parents[parent]) parents[parent] = { count: 0, children: {} };
+            const cnt = cards.filter((c) => c.deck === name).length;
+            parents[parent].count += cnt;
+            parents[parent].children[child] = { count: cnt, fullName: name };
+          } else {
+            solos.push(name);
+          }
+        });
+
+        // ── Nút "Tất cả" ──
         const allBtn = document.createElement("div");
         allBtn.className =
           "deck-btn" + (S.selectedDeck === "all" ? " sel" : "");
@@ -3346,9 +3476,17 @@
         allBtn.onclick = function () {
           selectDeck(this);
         };
-        allBtn.innerHTML = `<div class="deck-name">Tất cả</div><div class="deck-count">${cards.length} thẻ đến hạn</div>`;
-        grid.appendChild(allBtn);
-        deckNames.forEach((d) => {
+        allBtn.innerHTML = `<div class="deck-name">Tất cả</div>
+    <div class="deck-count">${cards.length} thẻ đến hạn</div>`;
+
+        // Bọc "Tất cả" trong container giống deck-grid để layout không lệch
+        const topWrap = document.createElement("div");
+        topWrap.style.cssText =
+          "display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px";
+        topWrap.appendChild(allBtn);
+
+        // Solo decks (không có sub-deck)
+        solos.forEach((d) => {
           const count = cards.filter((c) => c.deck === d).length;
           const btn = document.createElement("div");
           const ci = deckColorIndex(d);
@@ -3358,9 +3496,98 @@
           btn.onclick = function () {
             selectDeck(this);
           };
-          btn.innerHTML = `<div class="deck-name">${d}</div><div class="deck-count">${count} thẻ đến hạn</div>`;
-          grid.appendChild(btn);
+          btn.innerHTML = `<div class="deck-name">${escHtml(d)}</div>
+      <div class="deck-count">${count} thẻ đến hạn</div>`;
+          topWrap.appendChild(btn);
         });
+        grid.appendChild(topWrap);
+
+        // ── Deck cha có sub-decks ──
+        Object.entries(parents)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .forEach(([parentName, info]) => {
+            const ci = deckColorIndex(parentName);
+            const isParentSelected = S.selectedDeck === "parent:" + parentName;
+            const isExpanded =
+              S._expandedParents?.has(parentName) || isParentSelected;
+            const colors = [
+              "#7f77dd",
+              "#ef9f27",
+              "#e24b4a",
+              "#378add",
+              "#1d9e75",
+              "#c97bbd",
+              "#e07d3c",
+              "#5bb8b0",
+            ];
+
+            const group = document.createElement("div");
+            group.className =
+              "deck-parent-group" + (isExpanded ? " expanded" : "");
+            group.dataset.parent = parentName;
+
+            // Header của parent deck
+            const header = document.createElement("div");
+            header.className =
+              "deck-parent-header" + (isParentSelected ? " sel" : "");
+            header.dataset.deck = "parent:" + parentName;
+            header.style.cssText = `border-color:${colors[ci]}33;`;
+            header.innerHTML = `
+      <span style="width:10px;height:10px;border-radius:50%;background:${
+        colors[ci]
+      };flex-shrink:0;display:inline-block"></span>
+      <span class="deck-parent-name" style="color:${colors[ci]}">${escHtml(
+              parentName
+            )}</span>
+      <span class="deck-parent-count">${info.count} thẻ</span>
+      <span class="deck-parent-chevron">▶</span>`;
+
+            header.onclick = function (e) {
+              // Toggle expanded
+              if (!S._expandedParents) S._expandedParents = new Set();
+              if (S._expandedParents.has(parentName))
+                S._expandedParents.delete(parentName);
+              else S._expandedParents.add(parentName);
+              group.classList.toggle("expanded");
+
+              // Chọn parent (học tất cả sub-decks)
+              document
+                .querySelectorAll(".deck-btn,.deck-parent-header")
+                .forEach((b) => {
+                  b.classList.remove("sel");
+                });
+              header.classList.add("sel");
+              S.selectedDeck = "parent:" + parentName;
+            };
+            group.appendChild(header);
+
+            // Children sub-decks
+            const childrenWrap = document.createElement("div");
+            childrenWrap.className = "deck-children";
+
+            Object.entries(info.children)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .forEach(([childName, childInfo]) => {
+                const btn = document.createElement("div");
+                const cci = deckColorIndex(childInfo.fullName);
+                btn.className =
+                  "deck-btn sub" +
+                  (S.selectedDeck === childInfo.fullName ? " sel" : "");
+                btn.dataset.deck = childInfo.fullName;
+                btn.dataset.color = cci;
+                btn.onclick = function (e) {
+                  e.stopPropagation();
+                  selectDeck(this);
+                };
+                btn.innerHTML = `<div class="deck-name">${escHtml(
+                  childName
+                )}</div>
+        <div class="deck-count">${childInfo.count} thẻ</div>`;
+                childrenWrap.appendChild(btn);
+              });
+            group.appendChild(childrenWrap);
+            grid.appendChild(group);
+          });
       }
 
       function renderDeckSuggestions(deckNames) {
@@ -3381,7 +3608,7 @@
 
       function selectDeck(el) {
         document
-          .querySelectorAll(".deck-btn")
+          .querySelectorAll(".deck-btn,.deck-parent-header")
           .forEach((b) => b.classList.remove("sel"));
         el.classList.add("sel");
         S.selectedDeck = el.dataset.deck;
@@ -3391,10 +3618,19 @@
       // SESSION
       // ═══════════════════════════════════════════════════════════════════
       function startSession() {
-        let pool =
-          S.selectedDeck === "all"
-            ? [...S.cards]
-            : S.cards.filter((c) => c.deck === S.selectedDeck);
+        let pool;
+        if (S.selectedDeck === "all") {
+          pool = [...S.cards];
+        } else if (S.selectedDeck?.startsWith("parent:")) {
+          // Học tất cả sub-decks của parent
+          const parentName = S.selectedDeck.slice(7); // bỏ "parent:"
+          pool = S.cards.filter(
+            (c) =>
+              c.deck?.startsWith(parentName + " / ") || c.deck === parentName
+          );
+        } else {
+          pool = S.cards.filter((c) => c.deck === S.selectedDeck);
+        }
         if (!pool.length) {
           toast("Không có thẻ nào đến hạn trong bộ thẻ này!");
           return;
@@ -3406,8 +3642,17 @@
         S.passCount = 0;
         S.failCount = 0;
         showScreen("screen-review");
-        document.getElementById("deck-label").textContent =
-          S.selectedDeck === "all" ? "Tất cả bộ thẻ" : S.selectedDeck;
+        let deckLabel;
+        if (S.selectedDeck === "all") deckLabel = "Tất cả bộ thẻ";
+        else if (S.selectedDeck?.startsWith("parent:"))
+          deckLabel = S.selectedDeck.slice(7) + " (tất cả)";
+        else {
+          // Nếu là sub-deck "BA / Process Mapping" → hiển thị "Process Mapping"
+          const parts = S.selectedDeck.split(" / ");
+          deckLabel =
+            parts.length > 1 ? parts[parts.length - 1] : S.selectedDeck;
+        }
+        document.getElementById("deck-label").textContent = deckLabel;
         showCard(0);
       }
 
@@ -3450,8 +3695,25 @@
         document.getElementById("r-ef").textContent = `EF ${card.ef.toFixed(
           2
         )}`;
-        document.getElementById("r-status-badge").textContent =
-          card.status || "New";
+        const statusEl = document.getElementById("r-status-badge");
+        const st = (card.status || "New").toLowerCase();
+        const statusClass = st.includes("new")
+          ? "s-new"
+          : st.includes("learn")
+          ? "s-learning"
+          : st.includes("review")
+          ? "s-review"
+          : st.includes("master")
+          ? "s-mastered"
+          : "s-new";
+        const statusLabel = {
+          "s-new": "Mới",
+          "s-learning": "Đang học",
+          "s-review": "Ôn luyện",
+          "s-mastered": "Thành thạo",
+        }[statusClass];
+        statusEl.className = `status-badge ${statusClass}`;
+        statusEl.textContent = statusLabel;
         const tagsEl = document.getElementById("r-tags");
         if (card.tags?.length) {
           tagsEl.innerHTML = card.tags
@@ -3478,6 +3740,7 @@
         document.getElementById(
           "session-stats-mini"
         ).textContent = `${S.passCount} đúng · ${S.failCount} sai`;
+        syncCardHeight();
       }
 
       function flipCard() {
@@ -4611,6 +4874,28 @@
             /→/g,
             '<span style="color:var(--text3);font-weight:500">→</span>'
           );
+      }
+
+      function syncCardHeight() {
+        // Đo nội dung thực của back face và đặt min-height cho card-body
+        requestAnimationFrame(() => {
+          const body = document.getElementById("card-body");
+          const front = body?.querySelector(".card-face.front");
+          const back = body?.querySelector(".card-face.back");
+          if (!body || !front || !back) return;
+
+          // Reset trước khi đo
+          body.style.minHeight = "";
+          back.style.height = "auto";
+
+          // Đo chiều cao thực của back (nội dung không bị crop)
+          const backScrollH = back.scrollHeight;
+          const frontH = front.offsetHeight;
+          const needed = Math.max(frontH, backScrollH, 260);
+
+          body.style.minHeight = needed + "px";
+          back.style.height = needed + "px";
+        });
       }
 
       // ── Free Study Mode ──
