@@ -93,8 +93,16 @@
         justify-content: space-between;
         padding: 0.875rem 1.5rem;
         border-bottom: 0.5px solid var(--bd);
-        background: var(--surface);
+
         flex-shrink: 0;
+        background: rgba(255, 255, 255, 0.85); /* ← thay var(--surface) */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      @media (prefers-color-scheme: dark) {
+        .topbar {
+          background: rgba(26, 25, 23, 0.88);
+        }
       }
       .logo {
         font-family: var(--card-font);
@@ -230,10 +238,12 @@
 
       /* ── CARD ── */
       .card {
-        background: var(--surface);
+        background: rgba(255, 255, 255, 0.88);
         border: 0.5px solid var(--bd);
         border-radius: var(--rl);
         padding: 1.25rem 1.5rem;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
 
       /* ── STATS STRIP ── */
@@ -248,7 +258,17 @@
         border: 0.5px solid var(--bd);
         border-radius: var(--r);
         padding: 0.875rem;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        background: rgba(255, 255, 255, 0.82); /* ← semi-transparent white */
       }
+
+      @media (prefers-color-scheme: dark) {
+        .stat-box {
+          background: rgba(36, 35, 32, 0.85);
+        }
+      }
+
       .stat-val {
         font-size: 26px;
         font-weight: 500;
@@ -273,6 +293,9 @@
         border-radius: 999px;
         padding: 3px;
         width: fit-content;
+        background: rgba(238, 237, 233, 0.88); /* ← thay var(--bg2) */
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
       }
       .tab-btn {
         padding: 5px 18px;
@@ -773,6 +796,14 @@
         border: 0.5px solid var(--bd);
         border-radius: var(--rl);
         overflow: hidden;
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(8px);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .log-table-wrap {
+          background: rgba(36, 35, 32, 0.88);
+        }
       }
       .log-table {
         width: 100%;
@@ -913,9 +944,9 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 2rem 1.5rem;
+        padding: 1.5rem 2rem;
         gap: 1.5rem;
-        max-width: 700px;
+        max-width: 1000px;
         margin: 0 auto;
         width: 100%;
       }
@@ -939,9 +970,18 @@
         font-size: 11px;
         padding: 3px 10px;
         border-radius: 999px;
-        background: var(--bg2);
-        color: var(--text2);
-        border: 0.5px solid var(--bd);
+        background: var(--amber-l); /* ← màu amber để phân biệt với deck xanh */
+        color: var(--amber-d);
+        font-weight: 500;
+        border: 0.5px solid rgba(239, 159, 39, 0.4);
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        max-width: none; /* override cũ */
       }
       .card-num {
         margin-left: auto;
@@ -971,8 +1011,8 @@
         background: var(--surface);
         border: 0.5px solid var(--bd2);
         border-radius: var(--rl);
-        padding: 2.5rem 2rem;
-        min-height: 240px;
+        padding: 3rem 2.5rem;
+        min-height: 300px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -1013,21 +1053,68 @@
       }
       .card-q {
         font-family: var(--card-font);
-        font-size: 26px;
+        font-size: 30px;
         font-weight: 500;
-        line-height: 1.35;
+        line-height: 1.5;
         letter-spacing: -0.01em;
         color: var(--text);
+        white-space: pre-wrap; /* ← thêm: giữ xuống dòng từ Notion */
+        text-align: center;
+        max-width: 560px;
+        word-break: break-word;
       }
+      /* Tìm và thay .card-a: */
       .card-a {
         font-family: var(--card-font);
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 400;
-        line-height: 1.55;
+        line-height: 1.8; /* ← tăng từ 1.55 */
         color: var(--text);
-        max-width: 520px;
+        max-width: 560px; /* ← tăng từ 520px */
         white-space: pre-wrap;
-        text-align: center;
+        text-align: left; /* ← đổi từ center: dễ đọc hơn */
+        word-break: break-word;
+      }
+
+      .card-rendered {
+        font-family: var(--card-font);
+        font-size: 24px;
+        line-height: 1.85;
+        color: var(--text);
+        max-width: 560px;
+        text-align: left;
+        word-break: break-word;
+      }
+      .card-rendered p {
+        margin-bottom: 0.6em;
+      }
+      .card-rendered p:last-child {
+        margin-bottom: 0;
+      }
+      .card-rendered ol,
+      .card-rendered ul {
+        padding-left: 1.4em;
+        margin: 0.4em 0;
+      }
+      .card-rendered li {
+        margin-bottom: 0.4em;
+        line-height: 1.75;
+      }
+      .card-rendered strong {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .card-rendered .dash-item {
+        display: flex;
+        gap: 0.5em;
+        margin-bottom: 0.4em;
+        align-items: flex-start;
+      }
+      .card-rendered .dash-item::before {
+        content: "—";
+        color: var(--text3);
+        flex-shrink: 0;
+        margin-top: 0.05em;
       }
       .card-a-sub {
         font-size: 13px;
@@ -3297,8 +3384,22 @@
         document.getElementById("card-body").classList.remove("flipped");
         document.getElementById("rating-panel").classList.remove("visible");
         document.getElementById("flip-prompt").classList.remove("hidden");
-        document.getElementById("card-front-text").textContent = card.front;
-        document.getElementById("card-back-text").textContent = card.back;
+        // Front — nếu ngắn (≤80 ký tự, 1 dòng): giữ font to, căn giữa
+        // Front — nếu dài: nhỏ hơn, căn trái
+        const frontEl = document.getElementById("card-front-text");
+        const frontText = card.front || "";
+        if (frontText.length <= 100 && !frontText.includes("\n")) {
+          frontEl.className = "card-q";
+          frontEl.textContent = frontText;
+        } else {
+          frontEl.className = "card-rendered";
+          frontEl.innerHTML = formatCardText(frontText);
+        }
+
+        // Back — luôn dùng rendered format
+        const backEl = document.getElementById("card-back-text");
+        backEl.className = "card-rendered";
+        backEl.innerHTML = formatCardText(card.back || "");
         document.getElementById("card-back-sub").textContent = "";
         document.getElementById("r-deck").textContent = card.deck;
         document.getElementById("r-ef").textContent = `EF ${card.ef.toFixed(
@@ -3308,22 +3409,21 @@
           card.status || "New";
         const tagsEl = document.getElementById("r-tags");
         if (card.tags?.length) {
-          // Hiển thị dạng badges thay vì text phẳng
           tagsEl.innerHTML = card.tags
             .map(
-              (
-                t
-              ) => `<span style="display:inline-block;padding:1px 7px;background:var(--bg2);
-      border-radius:999px;font-size:10px;margin:0 2px 2px 0;white-space:nowrap">
-      ${escHtml(t)}</span>`
+              (t) =>
+                `<span style="display:inline-block;padding:2px 9px;
+      background:var(--amber-l);color:var(--amber-d);
+      border:0.5px solid rgba(239,159,39,0.4);
+      border-radius:999px;font-size:11px;font-weight:500;
+      white-space:nowrap">${escHtml(t)}</span>`
             )
             .join("");
-          tagsEl.style.display = "flex";
-          tagsEl.style.flexWrap = "wrap";
-          tagsEl.style.gap = "2px";
+          tagsEl.style.cssText =
+            "display:flex;flex-wrap:wrap;gap:4px;max-width:none;background:none;border:none;padding:0";
         } else {
           tagsEl.textContent = "No tags";
-          tagsEl.style.display = "";
+          tagsEl.style.cssText = "";
         }
         const pct = Math.round((i / S.queue.length) * 100);
         document.getElementById("progress-fill").style.width = pct + "%";
@@ -4262,6 +4362,61 @@
         { bg: "#e8f4e8", border: "#4caf82", label: "#71c49a" }, // sage
         { bg: "#fff3e0", border: "#e07d3c", label: "#e89a62" }, // peach
       ];
+
+      function formatCardText(raw) {
+        if (!raw) return "";
+        const text = raw.trim();
+        const lines = text.split("\n").filter((l) => l.trim() !== "");
+
+        // Nếu chỉ 1 dòng → wrap vào p, không cần list
+        if (lines.length === 1) {
+          return `<p>${escHtml(lines[0])}</p>`;
+        }
+
+        let html = "";
+        let inOl = false;
+
+        lines.forEach((line, i) => {
+          const trimmed = line.trim();
+
+          // Numbered list: "1.", "2.", "1)", "2)"
+          const numMatch = trimmed.match(/^(\d+)[.)]\s+(.+)$/);
+          if (numMatch) {
+            if (!inOl) {
+              html += "<ol>";
+              inOl = true;
+            }
+            html += `<li>${escHtml(numMatch[2])}</li>`;
+            return;
+          }
+
+          // Đóng ol nếu đang mở và dòng này không phải numbered
+          if (inOl) {
+            html += "</ol>";
+            inOl = false;
+          }
+
+          // Bullet: "- ", "• ", "* "
+          const bulletMatch = trimmed.match(/^[-•*]\s+(.+)$/);
+          if (bulletMatch) {
+            html += `<ul><li>${escHtml(bulletMatch[1])}</li></ul>`;
+            return;
+          }
+
+          // Dòng bắt đầu bằng "— " (em dash)
+          const dashMatch = trimmed.match(/^—\s*(.+)$/);
+          if (dashMatch) {
+            html += `<div class="dash-item">${escHtml(dashMatch[1])}</div>`;
+            return;
+          }
+
+          // Dòng bình thường → paragraph
+          html += `<p>${escHtml(trimmed)}</p>`;
+        });
+
+        if (inOl) html += "</ol>";
+        return html;
+      }
 
       // ── Free Study Mode ──
       async function toggleFreeStudy() {
