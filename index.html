@@ -1229,6 +1229,46 @@
         flex-shrink: 0;
         margin-top: 0.05em;
       }
+
+      /* ── CODE BLOCK trong card ── */
+      .card-rendered pre {
+        background: var(--bg);
+        border: 0.5px solid var(--bd2);
+        border-radius: var(--r);
+        padding: 1rem 1.25rem;
+        overflow-x: auto;
+        margin: 0.4em 0;
+        text-align: left;
+        white-space: pre;
+        scrollbar-width: thin;
+        scrollbar-color: var(--bd2) transparent;
+      }
+      .card-rendered pre::-webkit-scrollbar { height: 4px; }
+      .card-rendered pre::-webkit-scrollbar-thumb {
+        background: var(--bd2); border-radius: 2px;
+      }
+      .card-rendered code {
+        font-family: "JetBrains Mono", "Fira Code", "Cascadia Code",
+          ui-monospace, "SFMono-Regular", Consolas, monospace;
+        font-size: 13.5px;
+        line-height: 1.75;
+        color: var(--text);
+        background: none;
+        white-space: pre;
+      }
+      /* SQL keyword highlighting */
+      .card-rendered code .kw { color: var(--blue); font-weight: 600; }
+      .card-rendered code .fn { color: var(--purple); }
+      .card-rendered code .str { color: var(--green); }
+      .card-rendered code .num { color: var(--amber-d); }
+      .card-rendered code .cmt { color: var(--text3); font-style: italic; }
+      @media (prefers-color-scheme: dark) {
+        .card-rendered pre {
+          background: rgba(0,0,0,0.25);
+        }
+        .card-rendered code .kw { color: #78b4ff; }
+        .card-rendered code .str { color: #3ec99a; }
+      }
       .card-a-sub {
         font-size: 13px;
         color: var(--text2);
@@ -3557,7 +3597,7 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // SM-2
+      // SM-2  (enhanced: first-review interval scales with rating)
       // ═══════════════════════════════════════════════════════════════════
       function sm2(card, q) {
         let { ef, interval, reps } = card;
@@ -3565,13 +3605,22 @@
         newEf = Math.max(1.3, newEf);
         let newReps, newInterval;
         if (q < 3) {
+          // Trả lời sai → reset về đầu
           newReps = 0;
           newInterval = 1;
         } else {
           newReps = reps + 1;
-          if (reps === 0) newInterval = 1;
-          else if (reps === 1) newInterval = 6;
-          else newInterval = Math.round(interval * newEf);
+          if (reps === 0) {
+            // Lần review đầu tiên — scale nhẹ theo mức độ nhớ
+            // q=3 → 1d, q=4 → 2d, q=5 → 4d
+            if (q === 5) newInterval = 4;
+            else if (q === 4) newInterval = 2;
+            else newInterval = 1;
+          } else if (reps === 1) {
+            newInterval = 6;
+          } else {
+            newInterval = Math.round(interval * newEf);
+          }
         }
         const nextDate = new Date();
         nextDate.setDate(nextDate.getDate() + newInterval);
@@ -3659,17 +3708,7 @@
                 cardId: card.id,
                 cardFront: card.front,
                 cardDeck: card.deck,
-                date: localDate(new Date()),
-                rating: q,
-                newInterval: result.newInterval,
-                newEf: result.newEf,
-              }),
-              body: JSON.stringify({
-                action: "log",
-                cardId: card.id,
-                cardFront: card.front,
-                cardDeck: card.deck,
-                cardDeckRelId: card.deckRelId || null, // ← thêm dòng này
+                cardDeckRelId: card.deckRelId || null,
                 date: localDate(new Date()),
                 rating: q,
                 newInterval: result.newInterval,
@@ -4470,17 +4509,94 @@
         { bg: "#fff3e0", border: "#e07d3c", label: "#e89a62" }, // peach
       ];
 
+      // ─── Phát hiện SQL code ──────────────────────────────────────────────────
+      function isSqlCode(text) {
+        // Phải có ít nhất 1 DML/DDL chính + thêm 1 keyword SQL khác
+        const hasDml = /\b(SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|CREATE\s+(TABLE|DATABASE|INDEX|VIEW)|DROP\s+(TABLE|DATABASE)|ALTER\s+TABLE)\b/i.test(text);
+        if (!hasDml) return false;
+        const sqlKeywords = /\b(FROM|WHERE|JOIN|ON|GROUP\s+BY|ORDER\s+BY|HAVING|SET|VALUES|INTO|LIMIT|OFFSET|UNION|DISTINCT|AS\s+\w|INNER|LEFT|RIGHT|FULL|CROSS|COUNT\(|SUM\(|AVG\(|MIN\(|MAX\()\b/i;
+        return sqlKeywords.test(text);
+      }
+
+      // ─── Auto-format SQL với line breaks tại các clause ─────────────────────
+      function formatSqlForDisplay(sql) {
+        return sql
+          .replace(/\s+/g, ' ')                                        // collapse whitespace
+          .replace(/\s+(FROM)\s+/gi,          '\nFROM ')
+          .replace(/\s+(INNER\s+JOIN)\s+/gi,  '\nINNER JOIN ')
+          .replace(/\s+(LEFT\s+JOIN)\s+/gi,   '\nLEFT JOIN ')
+          .replace(/\s+(RIGHT\s+JOIN)\s+/gi,  '\nRIGHT JOIN ')
+          .replace(/\s+(FULL\s+JOIN)\s+/gi,   '\nFULL JOIN ')
+          .replace(/\s+(CROSS\s+JOIN)\s+/gi,  '\nCROSS JOIN ')
+          .replace(/\s+\b(JOIN)\s+/gi,        '\nJOIN ')
+          .replace(/\s+(WHERE)\s+/gi,         '\nWHERE ')
+          .replace(/\s+(AND)\s+/gi,           '\n  AND ')
+          .replace(/\s+(OR)\s+/gi,            '\n  OR ')
+          .replace(/\s+(GROUP\s+BY)\s+/gi,    '\nGROUP BY ')
+          .replace(/\s+(ORDER\s+BY)\s+/gi,    '\nORDER BY ')
+          .replace(/\s+(HAVING)\s+/gi,        '\nHAVING ')
+          .replace(/\s+(LIMIT)\s+/gi,         '\nLIMIT ')
+          .replace(/\s+(UNION(\s+ALL)?)\s+/gi,'\nUNION ')
+          .replace(/\s+(SET)\s+/gi,           '\nSET ')
+          .trim();
+      }
+
+      // ─── Syntax highlight SQL (đơn giản, không dùng lib ngoài) ─────────────
+      function highlightSql(code) {
+        // Escape HTML trước
+        let s = escHtml(code);
+        // Strings: 'value'
+        s = s.replace(/'([^']*)'/g, '<span class="str">\'$1\'</span>');
+        // Numbers: standalone số (không nằm trong từ)
+        s = s.replace(/\b(\d+(\.\d+)?)\b/g, '<span class="num">$1</span>');
+        // Functions: WORD(
+        s = s.replace(/\b(COUNT|SUM|AVG|MIN|MAX|COALESCE|IFNULL|ISNULL|NVL|CAST|CONVERT|ROUND|FLOOR|CEIL|CEILING|LENGTH|SUBSTRING|SUBSTR|TRIM|UPPER|LOWER|NOW|DATE|YEAR|MONTH|DAY|DATEDIFF|TIMESTAMPDIFF)\b(?=\s*\()/gi,
+          '<span class="fn">$1</span>');
+        // Keywords
+        const kws = 'SELECT|INSERT|INTO|UPDATE|DELETE|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|FULL|CROSS|ON|AS|AND|OR|NOT|IN|EXISTS|BETWEEN|LIKE|IS|NULL|GROUP\\s+BY|ORDER\\s+BY|HAVING|LIMIT|OFFSET|DISTINCT|UNION|ALL|SET|VALUES|CREATE|TABLE|DATABASE|INDEX|VIEW|DROP|ALTER|ADD|COLUMN|PRIMARY\\s+KEY|FOREIGN\\s+KEY|REFERENCES|DEFAULT|UNIQUE|AUTO_INCREMENT|DESC|ASC|CASE|WHEN|THEN|ELSE|END|WITH|OVER|PARTITION\\s+BY';
+        s = s.replace(new RegExp(`\\b(${kws})\\b`, 'gi'),
+          '<span class="kw">$1</span>');
+        return s;
+      }
+
+      // ─── Render code block (SQL hoặc generic) ────────────────────────────────
+      function renderCodeBlock(code, lang) {
+        const highlighted = (lang === 'sql' || lang === 'SQL')
+          ? highlightSql(code)
+          : escHtml(code);
+        return `<pre><code>${highlighted}</code></pre>`;
+      }
+
       function formatCardText(raw) {
         if (!raw) return "";
         const text = raw.trim();
         if (!text) return "";
 
-        // ── BƯỚC 1: Chuẩn hoá — replace literal \n (escaped) thành newline thật
+        // ── BƯỚC 0: Kiểm tra triple-backtick code block ──────────────────────
+        const fenceMatch = text.match(/^```(\w*)\s*\n?([\s\S]*?)```\s*$/s);
+        if (fenceMatch) {
+          const lang = fenceMatch[1].toLowerCase() || "code";
+          return renderCodeBlock(fenceMatch[2].trim(), lang);
+        }
+
+        // ── BƯỚC 1: Chuẩn hoá newline ────────────────────────────────────────
         const normalized = text
           .replace(/\\n/g, "\n")
           .replace(/\r\n/g, "\n")
           .replace(/\r/g, "\n")
           .replace(/\n{3,}/g, "\n\n");
+
+        // ── BƯỚC 1b: Phát hiện SQL code ──────────────────────────────────────
+        // (áp dụng cả khi có hoặc không có newline trong raw)
+        if (isSqlCode(normalized)) {
+          // Nếu raw đã có newline → dùng nguyên bản (người dùng đã format tay)
+          // Nếu là 1 dòng dài → auto-format clause-by-clause
+          const hasRealNewlines = normalized.includes('\n');
+          const sqlFormatted = hasRealNewlines
+            ? normalized.trim()
+            : formatSqlForDisplay(normalized);
+          return renderCodeBlock(sqlFormatted, 'sql');
+        }
 
         // ── BƯỚC 2: Nếu có newline thật → xử lý từng dòng
         const lines = normalized
